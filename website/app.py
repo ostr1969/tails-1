@@ -5,6 +5,7 @@ from flask import request
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import utils
 import fscrawlerUtils as fsutils
 from SearchHit import hits_from_resutls

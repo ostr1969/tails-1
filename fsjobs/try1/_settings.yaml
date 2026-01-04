@@ -31,6 +31,6 @@ fs:
   remove_deleted: true
   store_source: false
   update_rate: 16m
-  url: /home/barako/Tails/Samples/try1
+  url: /home/barako/Tails2/Sample/try1
   xml_support: false
-name: try
+name: try1

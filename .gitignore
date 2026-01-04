@@ -1,0 +1,6 @@
+Sample/
+__pycache__/
+website/node_modules/.bin/
+website/node_modules/
+node_modules/
+scripts/__pycache__/

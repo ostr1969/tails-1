@@ -20,23 +20,7 @@ def get_all_jobs():
             jobs.append(obj)
     return jobs
 
-def create_new_job_obselete(name: str):
-    """create a new project for FSCrawler. this is the first step in running it."""
-    print(f"Creating new job: {name}")
-    exe_path = utils.get_config("fscrawler")["exe"]
-    config_dir = utils.get_config("fscrawler")["config_dir"]
-    current_config_dir = os.path.join(config_dir,name)
-    if name in FSCRAWLER_JOBS and os.path.isdir(current_config_dir):
-        return False
-    # we create a job in the specified directory. also, we make sure the crawler will run only once on all files
-    cmd = " ".join([exe_path, name, "--config_dir", config_dir, "--loop 1"])
-    # run the process, we have to approve the creation by sending "yes"
-    proc = Popen(cmd, stdin=PIPE, stdout=PIPE, text=True, shell=True)
-    proc.communicate("Y\n")
-    proc.wait()
-    FSCRAWLER_JOBS[name] = None
-    print("CREATED DIRECTORY by fscrawler initializing AT ", current_config_dir)
-    return True
+
 def create_new_job(name: str):
     """create a new project for FSCrawler. this is the first step in running it."""
     print(f"Creating new job: {name}")
@@ -65,7 +49,7 @@ def run_fs_docker_job(name: str,target_dir: str):
                 
                 "--network", "elastic", 
                 f"dadoonet/fscrawler:{FSCRAWLER_VERSION}", 
-                name, "--restart","--silent", "--loop", "1"])
+                name, "--restart", "--loop", "1"])
 
 def get_job_settings_path(name: str):
     path = os.path.join(utils.get_config("docker_env")["FSCRAWLER_CONFIG"], name, "_settings.yaml")
