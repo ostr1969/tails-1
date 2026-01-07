@@ -4,3 +4,7 @@ website/node_modules/.bin/
 website/node_modules/
 node_modules/
 scripts/__pycache__/
+files/
+pdfjs/
+!static/pdfjs/web/withquery.js
+!static/pdfjs/web/viewer.html

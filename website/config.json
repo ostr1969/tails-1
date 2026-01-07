@@ -5,7 +5,10 @@
     "similar_document_fields": ["grobid.metadata.title", "huridocs.title", "content","meta.title"],
     "open_file_types": ["pdf", "jpeg", "png"],
     "display_fields": [
-        {"field": "huridocs.title", "display_name": "Title", "style": "$VALUE","use_highlights": true},
+        {"field": "huridocs.title", "display_name": "huridocsTitle", "style": "$VALUE","use_highlights": true},
+        {"field": "grobid.metadata.title", "display_name": "grobidTitle", "style": "$VALUE","use_highlights": true},
+        {"field": "meta.title", "display_name": "metaTitle", "style": "$VALUE","use_highlights": true},
+         {"field": "title", "display_name": "Title", "style": "$VALUE","use_highlights": true},
         {"field": "file.extension", "display_name": "File Type", "style": "$VALUE","use_highlights": true},
         {"field": "grobid.abstract.text", "display_name": "Abstract", "style": "$VALUE","use_highlights": true, "max_length": 1000},
         {"field": "path.real", "display_name": "Path", "style": "$VALUE","use_highlights": true},
@@ -29,10 +32,10 @@
         "fonts_dir": "..\\DwgTextract\\Resources\\Fonts\\"
     },
     "semantic_search": {
-        "model_path": "all-MiniLM-L6-v2", 
-        "chunk_index": "pdfs_chunks",
+        "model_path": "all-MiniLM-L6-v2",         
         "nchunks": 1000,
-        "ndocs": 100
+        "ndocs": 100,
+        "ollama_embedding_model": "qwen3-embedding:8b"
     },
     "chat_settings": {
         "key": "AIzaSyARwXAiNyAhR1PGcRPINJ8xkxnXIBN-rHM",

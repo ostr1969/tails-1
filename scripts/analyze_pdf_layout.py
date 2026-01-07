@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from typing import List
 import requests
 import os
+import bibtexparser
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 def raw_layout_json(path: str) -> dict:
@@ -68,6 +69,7 @@ def grobid_bibliographic_data(path: str):
         JSON response as a dictionary
     """
     url = "http://localhost:8070/api/processHeaderDocument"
+    #url = "http://localhost:8070/api/processFulltextDocument"
     
     # Verify file exists
     if not os.path.exists(path):
@@ -75,14 +77,26 @@ def grobid_bibliographic_data(path: str):
     
     # Prepare the multipart form data
     with open(path, 'rb') as pdf_file:
-        files = {'input': pdf_file}
+        files = {'input': pdf_file}        
         headers = {'Accept': 'application/xml'}
-        
-        response = requests.post(url, files=files, headers=headers)
-        response.raise_for_status()        
-        soup = BeautifulSoup(response.text, "xml")        
-        paper = convert_xml_to_json(soup, paper_id="id", pdf_hash="hash")
-        return paper.as_json()
+        files = {
+        "input": (os.path.basename(path), pdf_file, "application/pdf")
+        }
+        response = requests.post(url, files=files)
+        response.raise_for_status()  
+        #print(response.text) 
+        #print(response.headers.get("Content-Type"))    
+        #soup = BeautifulSoup(response.text, "xml")  
+        #print(soup)
+        bib_database = bibtexparser.loads(response.text)      
+        #paper = convert_xml_to_json(soup, paper_id="id", pdf_hash="hash")
+        #print(json.dumps(bib_database.entries[0], indent=2))
+        entry = bib_database.entries[0]
+        if "abstract" in entry:
+            entry["abstract"] = {"text": entry["abstract"]}
+        if "date" in entry and (entry["date"] is None or entry["date"].strip() == ""):
+            del entry["date"]    
+        return entry
 
 def run_with_timeout(func, args, timeout=30):
     """
@@ -109,6 +123,8 @@ def run_with_timeout(func, args, timeout=30):
         return None
 
 def analyze_file(path: str, file_timeout: float):
+    
+    
     pdla_layout = run_with_timeout(raw_layout_json, (path, ), file_timeout)
     glayout=run_with_timeout(grobid_bibliographic_data, (path, ), file_timeout)
     
@@ -130,6 +146,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="analyze pdf layout in the index")
     parser.add_argument("index_name", type=str, help="name of the Elastic index to analyze")
     parser.add_argument("file_timeout", type=float, help="timeout for analyzing file")
+    parser.add_argument("--restart", action="store_true", help="whether to restart the analysis from scratch")
     args = parser.parse_args()
     es = utils.get_esclient()
     index_name = args.index_name 
@@ -139,10 +156,15 @@ if __name__ == "__main__":
     for i, hit in enumerate(utils.search_by_extension(es, index_name, "pdf")):
         doc_id = hit["_id"]
         path = hit["_source"]["path"]["real"]
-        print(f"analyzing {i + 1} out of {nfiles} ({path})")
+        print(f"analyzing {doc_id} {i + 1} out of {nfiles} ({path})")        
+
+        if (("grobid" in hit["_source"] or "huridocs" in hit["_source"]) and not args.restart):
+            print("  already analyzed, skipping")
+            continue
         
+
         analysis = analyze_file(path, args.file_timeout)
-        
+        #grobid_bibliographic_data(path)
         # Update document in Elasticsearch
         es.update(index=index_name, id=doc_id, body={"doc": analysis})
 

@@ -1,6 +1,7 @@
 from shutil import copyfile
-from flask import render_template, request, send_file, jsonify
-from flask import request
+from flask import abort, render_template, request, send_file, jsonify
+from flask import request,session
+from urllib.parse import quote
 
 import sys
 import os
@@ -42,7 +43,7 @@ def search():
     if semantic_search:
         result = utils.semantic_search_documents(
             es_client=EsClient,
-            chunk_index=CONFIG["semantic_search"]["chunk_index"],
+            chunk_index=CONFIG["index"] + "_chunks",
             nchunks=CONFIG["semantic_search"]["nchunks"],
             ndocs=CONFIG["semantic_search"]["ndocs"],
             model=EmbeddingModel,
@@ -107,6 +108,9 @@ def log():
 @app.route('/view/<index>/<file_id>', methods=['GET'])
 def view(index: str, file_id: str):
     """endpoint for viewing file"""
+    words = request.args.get("words", "")
+    page = request.args.get("page", "1")
+   
     hit = EsClient.get(index=index, id=file_id)
     path = hit["_source"]["path"]["real"]
     # change base path in case files were moved after indexing
@@ -116,12 +120,26 @@ def view(index: str, file_id: str):
     ext = hit["_source"]["file"]["extension"]
     target = "files/{}.{}".format(file_id, ext)
     copyfile(path, target)
+    #print("Serving file:", path, "as", target)
     if ext.lower() in CONFIG["open_file_types"]:
         download = False
     else:
         download = True
-    return send_file(target, as_attachment=download)
-
+    #return send_file(target, as_attachment=download)
+    print("Viewing file:", file_id, "page:", page, "words:", words)
+    viewer = "/static/pdfjs/web/viewer.html"
+    return render_template("pdfpager.html", target=quote(target), page=page, viewer=viewer, query=words)
+    
+@app.route("/pdf/<path:filename>")
+def serve_pdf(filename):
+    try:
+        return send_file(
+            f"{filename}",
+            mimetype="application/pdf",
+            as_attachment=False
+        )
+    except FileNotFoundError:
+        abort(404)
 @app.route('/index', methods=['GET', 'POST'])
 def fscraller_index():
     if request.method == "POST":
@@ -207,7 +225,7 @@ def chat():
     
     message = request.json["message"]
 
-    response, chunks = utils.rag_query(EsClient, CONFIG["semantic_search"]["chunk_index"], 5, EmbeddingModel, message, document_id=docids)
+    response, chunks = utils.rag_query(EsClient, CONFIG["index"] + "_chunks", 5, EmbeddingModel, message, document_id=docids)
     
     sources = utils.chunks_to_sources(EsClient, CONFIG["index"], chunks)
     return jsonify({"response": response, "sources": sources})

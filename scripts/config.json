@@ -16,7 +16,8 @@
         "filename_embedding_field": "filename_embedding",
         "content_field": "content",
         "filename_field": "file.filename",
-        "use_semantic_search": true
+        "use_semantic_search": true,
+        "ollama_embedding_model": "qwen3-embedding:8b"
     },
     "docker_env":{
         "STACK_VERSION": "9.2.2",

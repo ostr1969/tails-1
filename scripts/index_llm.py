@@ -219,7 +219,7 @@ def clean_chunks(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     print(f"Cleaned {len(chunks)} chunks: {len(valid_chunks)} valid, {invalid_count} invalid")
     return valid_chunks
 
-def embed_document(es_client, doc: dict, model: SentenceTransformer, index_name: str, chunk_size: int, chunk_overlap: int):
+def embed_document(es_client, doc: dict, model: str, index_name: str, chunk_size: int, chunk_overlap: int):
     layout = doc["_source"].get("huridocs", {}).get("layout")
     if layout:
         chunks = chunk_sections(layout, max_tokens=chunk_size, overlap=chunk_overlap)
@@ -228,7 +228,20 @@ def embed_document(es_client, doc: dict, model: SentenceTransformer, index_name:
     chunks = clean_chunks(chunks)
     doc_id = doc["_id"]
     actions = []
-    embeddings = ollama.embed(model="qwen3-embedding:8b", input=[c["text"] for c in chunks], dimensions=1024).embeddings
+    match_query = {
+    "query": {
+        "match": {
+            "doc_id": doc_id
+        }
+    }
+}
+    
+    if not args.restart and existindex:
+        if es.count(index=index_name + "_chunks", body=match_query)["count"] > 0:
+                print(f"{doc_id} already exists, skipping...")
+                return  # Skip if chunk index already exists
+            
+    embeddings = ollama.embed(model=model, input=[c["text"] for c in chunks], dimensions=1024).embeddings
     for embedding, chunk in zip(embeddings, chunks):
     # for chunk in chunks:
         text = chunk["text"]
@@ -236,6 +249,7 @@ def embed_document(es_client, doc: dict, model: SentenceTransformer, index_name:
         # counter += 1 
         # print('embedding', counter, 'chunk')
         # embedding = list(ollama.embed(model="qwen3-embedding:8b", input=text, dimensions=1024).embeddings[0])
+  
         action = {
             "_op_type": "index",
             "_index": index_name + "_chunks",
@@ -243,6 +257,7 @@ def embed_document(es_client, doc: dict, model: SentenceTransformer, index_name:
             "_source": {
                 "doc_id": doc_id,
                 "doc_index": doc["_index"],
+                "embedding_model": model,
                 "text": text,
                 "embedding": embedding,
                 "pages": list(chunk["pages"]),
@@ -266,12 +281,16 @@ if __name__ == "__main__":
     parser.add_argument("index_name", type=str, help="name of index need to create chunk data")
     parser.add_argument("--chunk_size", type=int, help="set maximal number of tokens per chunk. default=350", default=350)
     parser.add_argument("--chunk_overlap", type=int, help="set number of overlapping tokens between chunks. default=50", default=50)
+    parser.add_argument("--restart", action="store_true", help="re-index all documents even if already indexed")
     args = parser.parse_args()
     # --- INITIALIZE ---
-    print(f"Loading embedding model...")
-    model = SentenceTransformer(utils.get_config("semantic_model")["model_name"])
-    print("Model loaded ✅")
+    #print(f"Loading embedding model...")
+    #model = SentenceTransformer(utils.get_config("semantic_model")["model_name"])
+    model=utils.get_config("semantic_model")["ollama_embedding_model"]
+    #print("Model loaded ✅")
     es = utils.get_esclient()
+    existindex=es.indices.exists(index=args.index_name + "_chunks")
+    
     nfiles = utils.count_files_with_extension(es, args.index_name, "pdf")
     print(f"Start embedding of {nfiles}...")
     for i, hit in enumerate(utils.search_by_extension(es, args.index_name, "pdf")):

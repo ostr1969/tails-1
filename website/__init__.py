@@ -11,6 +11,10 @@ app = Flask(__name__)
 CONFIG = {}
 with open("config.json") as f:
     CONFIG = json.load(f)
+with open("../scripts/config.json") as f2:
+    CONFIG2 = json.load(f2)    
+if CONFIG['semantic_search'].get('ollama_embedding_model')!=CONFIG2['semantic_model']['ollama_embedding_model']:
+    exit("Error: Mismatched ollama_embedding_model settings between website/config.json and scripts/config.json")
 curdir = os.getcwd()
 drive, path = os.path.splitdrive(curdir)
 #"exe": "\\..\\fscrawler\\bin\\fscrawler.bat",

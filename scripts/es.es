@@ -60,3 +60,19 @@ GET pdfs/_search?filter_path=*.*.*.meta.title,*.*.*.grobid.metadata.title,grobid
   }
 
 }
+GET heb/_search?filter_path=*.*.*.huridocs
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "exists": {
+            "field": "huridocs"
+          }
+        }
+      ]
+    }
+  }
+
+}
+get pdfs/_doc/86eed63a3401439c54b727a686a841e

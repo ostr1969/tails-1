@@ -23,8 +23,6 @@ fs:
     language: "eng"
     enabled: false
     pdf_strategy: "auto"
-    path: "C:\\install\\tails\\Tesseract-OCR"
-    data_path: "C:\\install\\tails\\Tesseract-OCR\\tessdata"
   follow_symlinks: false
 elasticsearch:
   urls:

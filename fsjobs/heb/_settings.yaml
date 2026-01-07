@@ -8,7 +8,7 @@ elasticsearch:
   urls:
   - http://es01:9200
 fs:
-  add_as_inner_object: true
+  add_as_inner_object: false
   add_filesize: true
   attributes_support: false
   continue_on_error: false
@@ -22,13 +22,15 @@ fs:
   json_support: false
   lang_detect: false
   ocr:
+    data_path: C:\install\tails\Tesseract-OCR\tessdata
     enabled: false
     language: eng
+    path: C:\install\tails\Tesseract-OCR
     pdf_strategy: auto
-  raw_metadata: true
+  raw_metadata: false
   remove_deleted: true
   store_source: false
   update_rate: 16m
-  url: /home/barako/Tails2/Sample/try1
+  url: /home/barako/Tails2/Sample/HebDocs
   xml_support: false
-name: try1
+name: heb
