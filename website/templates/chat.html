@@ -244,8 +244,9 @@
                 sourceList.id = sourceListId;
                 const sources = data.sources || [];
                 const sourceItems = sources.map((source, index) => {
-                    const pages = source.pages.join(', ');
-                    return `<li><a href="/view/${source.docindex}/${source.docid}" target="_blank">Document ${index + 1}</a>; Pages: ${pages}</li>`;
+                    const pages = source.pages.join(',');  
+                    //console.log("Source pages:", pages);                  
+                    return `<li><a href="/view/${source.docindex}/${source.docid}?chunkid=${source.chunkid}&pages=${pages}" target="_blank">Document ${index + 1}</a>; Pages: ${pages}</li>`;
                 }).join('');
                 sourceList.innerHTML = `<button class="close-btn" onclick="closeSources('${sourceListId}')">&times;</button><strong>Sources:</strong><ol>${sourceItems}</ol>`;
 

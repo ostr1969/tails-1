@@ -109,9 +109,11 @@ def log():
 def view(index: str, file_id: str):
     """endpoint for viewing file"""
     words = request.args.get("words", "")
-    page = request.args.get("page", "1")
-   
+    words=",".join(words.split())
+    pages = request.args.get("pages", "")
+    chunkid = request.args.get("chunkid", "")
     hit = EsClient.get(index=index, id=file_id)
+    
     path = hit["_source"]["path"]["real"]
     # change base path in case files were moved after indexing
     for base_path, new_path in CONFIG["base_paths"].items():
@@ -126,10 +128,18 @@ def view(index: str, file_id: str):
     else:
         download = True
     #return send_file(target, as_attachment=download)
-    print("Viewing file:", file_id, "page:", page, "words:", words)
+    print("Viewing file:", file_id, "pages:", pages, "words:", words,"chunkid:", chunkid)
     viewer = "/static/pdfjs/web/viewer.html"
-    return render_template("pdfpager.html", target=quote(target), page=page, viewer=viewer, query=words)
-    
+    return render_template("pdfpager.html", target=quote(target), pages=pages, 
+                           viewer=viewer, words=words,chunkid=chunkid,index=index)
+@app.route('/chunktext/<index>/<id>')
+def getchunktext(index: str, id: str):
+    chunktext=""
+    chunkhit=EsClient.get(index=index+"_chunks", id=id)
+    if "_source" in chunkhit and "text" in chunkhit["_source"]:
+        chunktext=chunkhit["_source"]["text"]
+
+    return jsonify(chunktext=chunktext, id=id)        
 @app.route("/pdf/<path:filename>")
 def serve_pdf(filename):
     try:

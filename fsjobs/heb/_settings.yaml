@@ -22,10 +22,8 @@ fs:
   json_support: false
   lang_detect: false
   ocr:
-    data_path: C:\install\tails\Tesseract-OCR\tessdata
     enabled: false
     language: eng
-    path: C:\install\tails\Tesseract-OCR
     pdf_strategy: auto
   raw_metadata: false
   remove_deleted: true

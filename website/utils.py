@@ -1,5 +1,6 @@
 from typing import Dict, List
 from sentence_transformers import SentenceTransformer
+from __init__ import  EmbeddingModel
 import json
 import ollama
 
@@ -18,6 +19,7 @@ Your task:
 1. Answer the user question using ONLY the provided chunks.
 2. If the answer cannot be found in the provided chunks, say:
    "The provided documents do not contain enough information to answer this question."
+
 
 Answering rules:
 • Prefer factual accuracy over completeness.
@@ -41,6 +43,8 @@ Style guidelines:
 • Do NOT mention embeddings, vector search, Elasticsearch, or retrieval mechanics.
 • Do NOT reference “chunks” explicitly in the final answer.
 • Do NOT include irrelevant information.
+
+
 
 When summarizing:
 • Preserve technical meaning.
@@ -91,7 +95,12 @@ def get_response( system_prompt: str, model_name: str,  input_text: str):
 
 def search_chunks_knn(es_client, chunk_index: str, nchunks: int, model: SentenceTransformer, query: str, document_id: str = None) -> List[Dict]:
     query_vector = ollama.embed(model="qwen3-embedding:8b", input=[query], dimensions=1024).embeddings[0]
-
+#     query_vector =   EmbeddingModel.encode(
+#     query,
+#     batch_size=32,
+#     show_progress_bar=True,
+#     normalize_embeddings=False
+# )
     # Base query for KNN search
     knn_query = {
         "field": "embedding",
@@ -103,7 +112,7 @@ def search_chunks_knn(es_client, chunk_index: str, nchunks: int, model: Sentence
     # Add a filter for document_id if provided
     base_query = {
         "knn": knn_query,
-        "_source": ["doc_id", "text", "pages"]
+        "_source": ["doc_id", "text", "pages", "doc_index"]
     }
 
     if document_id:
@@ -321,7 +330,8 @@ def chunks_to_sources(es_client, document_index, chunks):
         doc_id = c["_source"]["doc_id"]
         doc_index = c["_source"].get("doc_index", "pdfs")
         document = es_client.get(index=document_index, id=doc_id)["_source"]
-        sources.append({"path": document["path"]["real"], "docid": doc_id, "docindex": doc_index, "pages": c["_source"]["pages"]})
+        sources.append({"path": document["path"]["real"], "docid": doc_id,
+                        "docindex": doc_index, "pages": c["_source"]["pages"], "chunkid": c["_id"]})
     return sources
 
 

@@ -399,7 +399,7 @@
                         <div class="result-item">
                             <div class="result-actions">
                                 <button class="result-action-btn" id="download-doc-{{ loop.index }}"
-                                    onclick="window.open('/view/{{ hit.hit["_index"] }}/{{ hit.hit["_id"] }}', '_blank')">
+                                    onclick="window.open('/view/{{ hit.hit["_index"] }}/{{ hit.hit["_id"] }}?words={{query}}', '_blank')">
                                     <img src="{{ url_for('static', filename='images/download_color.png') }}" alt="Download" style="width: 24px; height: 24px;">
                                     <span class="tooltip">Download</span>
                                 </button>

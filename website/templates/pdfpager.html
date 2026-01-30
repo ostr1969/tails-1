@@ -7,9 +7,14 @@
   
     <body style="margin:0">
         <iframe
-        id="pdfFrame"
-            src="{{viewer}}?file=/pdf/{{target}}&words={{query}}#page={{page}}"
+        id="pdfFrame"                 
+            src="{% if chunkid %}
+                    {{ viewer }}?file=/pdf/{{ target }}&chunkid={{ chunkid }}&index={{ index }}&pages={{ pages }}
+                {% else %}
+                    {{ viewer }}?file=/pdf/{{ target }}&words={{ words }}
+                {% endif %}"
             style="width:100vw;height:100vh;border:none">
+                 
         </iframe>
       
     </body>

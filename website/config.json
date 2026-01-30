@@ -32,7 +32,7 @@
         "fonts_dir": "..\\DwgTextract\\Resources\\Fonts\\"
     },
     "semantic_search": {
-        "model_path": "all-MiniLM-L6-v2",         
+        "model_path": "LaBSE",         
         "nchunks": 1000,
         "ndocs": 100,
         "ollama_embedding_model": "qwen3-embedding:8b"
@@ -40,7 +40,7 @@
     "chat_settings": {
         "key": "AIzaSyARwXAiNyAhR1PGcRPINJ8xkxnXIBN-rHM",
         "system_prompt": "",
-        "model_name": "llama3.2:latest",
+        "model_name": "llama3.2",
         "welcome_message": "Welcome to wiLLMa chat! You're welcome to ask me anything about $SOURCE!"
     }
 }

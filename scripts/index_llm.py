@@ -219,7 +219,7 @@ def clean_chunks(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     print(f"Cleaned {len(chunks)} chunks: {len(valid_chunks)} valid, {invalid_count} invalid")
     return valid_chunks
 
-def embed_document(es_client, doc: dict, model: str, index_name: str, chunk_size: int, chunk_overlap: int):
+def embed_document(es_client, doc: dict, index_name: str, chunk_size: int, chunk_overlap: int):
     layout = doc["_source"].get("huridocs", {}).get("layout")
     if layout:
         chunks = chunk_sections(layout, max_tokens=chunk_size, overlap=chunk_overlap)
@@ -240,8 +240,21 @@ def embed_document(es_client, doc: dict, model: str, index_name: str, chunk_size
         if es.count(index=index_name + "_chunks", body=match_query)["count"] > 0:
                 print(f"{doc_id} already exists, skipping...")
                 return  # Skip if chunk index already exists
-            
-    embeddings = ollama.embed(model=model, input=[c["text"] for c in chunks], dimensions=1024).embeddings
+    
+    texts = [c["text"] for c in chunks]   
+    if args.use_ollama:
+        model = args.ollama_embedding_model
+        embeddings = ollama.embed(model=model, input=texts, dimensions=1024).embeddings
+    else:
+        model= args.sentence_transformer_model
+        embeddings = stmodel.encode(
+        texts,
+        batch_size=32,
+        show_progress_bar=True,
+        normalize_embeddings=False
+    )
+             
+    
     for embedding, chunk in zip(embeddings, chunks):
     # for chunk in chunks:
         text = chunk["text"]
@@ -264,8 +277,9 @@ def embed_document(es_client, doc: dict, model: str, index_name: str, chunk_size
             },
         }
         actions.append(action)
-
+        
     # Send the actions to Elasticsearch in bulk
+    
     helpers.bulk(es_client, actions)
 
 
@@ -282,22 +296,32 @@ if __name__ == "__main__":
     parser.add_argument("--chunk_size", type=int, help="set maximal number of tokens per chunk. default=350", default=350)
     parser.add_argument("--chunk_overlap", type=int, help="set number of overlapping tokens between chunks. default=50", default=50)
     parser.add_argument("--restart", action="store_true", help="re-index all documents even if already indexed")
+    parser.add_argument("--use_ollama", action="store_true", help="use ollama for embeddings")
+    parser.add_argument("--ollama_embedding_model", type=str, help="ollama embedding model to use", 
+                default=utils.get_config("semantic_model")["ollama_embedding_model"])
+    parser.add_argument("--sentence_transformer_model", type=str, help="sentence transformer model to use", 
+                        default=utils.get_config("semantic_model")["model_name"])
+   
     args = parser.parse_args()
     # --- INITIALIZE ---
     #print(f"Loading embedding model...")
     #model = SentenceTransformer(utils.get_config("semantic_model")["model_name"])
-    model=utils.get_config("semantic_model")["ollama_embedding_model"]
+    if not args.use_ollama:
+        stmodel=SentenceTransformer(args.sentence_transformer_model)
     #print("Model loaded ✅")
     es = utils.get_esclient()
     existindex=es.indices.exists(index=args.index_name + "_chunks")
-    
+    if args.restart and existindex:
+        print(f"Deleting existing chunk index {args.index_name + '_chunks'}...")
+        es.indices.delete(index=args.index_name + "_chunks")
+        existindex=False
     nfiles = utils.count_files_with_extension(es, args.index_name, "pdf")
     print(f"Start embedding of {nfiles}...")
     for i, hit in enumerate(utils.search_by_extension(es, args.index_name, "pdf")):
         print(f"embedding document {i + 1} out of {nfiles} (id={hit['_id']})")
         start = time.time()
         try:
-            embed_document(es, hit, model, args.index_name, args.chunk_size, args.chunk_overlap)
+            embed_document(es, hit, args.index_name, args.chunk_size, args.chunk_overlap)
             print("done! took", round(time.time() - start, 2), "seconds")
         except:
             print("FAILED INDEXING FOR DOCUMENT!")

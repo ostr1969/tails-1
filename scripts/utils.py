@@ -9,7 +9,20 @@ def get_config(key: str):
             return d[key]
         else: 
             raise KeyError(f"Unknown config key {key}")
+def fullpath_exists(es, index: str, fullpath: str) -> bool:
+    query = {
+        "query": {
+            "term": {
+                "fullpath": fullpath
+            }
+        },
+        "size": 0
+    }
 
+    res = es.search(index=index, body=query)
+    return res["hits"]["total"]["value"] > 0
+def index_exists(es, index: str) -> bool:
+    return es.indices.exists(index=index)
 def get_esclient():
     return Elasticsearch(get_config("elasticsearch_url"))
         
