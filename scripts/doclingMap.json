@@ -1,6 +1,19 @@
 {
     "mappings" : {
     "properties": {
+        "file":{
+            "properties":{
+                "extension":{"type":"keyword"}
+            }
+        },
+        "path":{
+            "properties":{
+                "real":{
+                "fielddata": true,
+                "analyzer": "path_analyzer",
+                "type": "text"}
+            }
+        },
         "extension": {
             "type": "keyword"
         },

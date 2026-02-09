@@ -32,7 +32,7 @@
         "ES_PATH": "/mnt/nvme1/Elastic"
     },
     "docling":{
-        "IGNORED_EXT":[".exe",".com",".dll",".so",".svg"],
+        "IGNORED_EXT":[".exe",".com",".dll",".so",".svg",".gitignore"],
         "EXCLUDED_DIRS":[".git", "__pycache__", ".venv"],
         "UNKNOWN_EXT":["",".sample"],
         "NOCHUNK_EXT":[".csv",".py",".js",".sh",".json"]
