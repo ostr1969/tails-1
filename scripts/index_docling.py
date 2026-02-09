@@ -18,7 +18,7 @@ from docling.chunking import HybridChunker
 from langchain_docling.loader import ExportType
 from tempfile import mkdtemp
 
-EMBED_MODEL_ID = "sentence-transformers/LaBSE"
+EMBED_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
 from pathlib import Path
 
 
@@ -48,6 +48,8 @@ def pdf_loader(file_path: str):
     reader = PdfReader(file_path)
     meta = reader.metadata
     doc["metadata"] = meta
+    if meta.get("/Title"):
+        doc["title"] = meta.get("/Title")
     dl_doc = converter.convert(source=file_path).document
     doc["fulltext"]=dl_doc.export_to_markdown()
     #file_path = Path(doc_store_root / f"{dl_doc.origin.binary_hash}.json")
@@ -59,7 +61,7 @@ def pdf_loader(file_path: str):
         chunk_dict={}
         filename=chunk.meta.origin.filename
         text=chunk.text
-        chunk_dict["filename"]=filename
+        #chunk_dict["filename"]=filename
         chunk_dict["text"]=text
         chunk_dict["items"]=[]
         for item in chunk.meta.doc_items:
@@ -112,21 +114,25 @@ if __name__ == "__main__":
     folder=Path(args.path)
     files = list(folder.rglob("*"))
     files = [p for p in files if p.suffix.lower() in exts]
+    with open("doclingMap.json") as f:
+        mappings = json.load(f)
     if args.new:
         print(f"Deleting index {args.index_name} if exists")
         EsClient.indices.delete(index=args.index_name, ignore=[400, 404])
-        EsClient.indices.create(index=args.index_name)
+        EsClient.indices.create(index=args.index_name,body=mappings)
     if not utils.index_exists(EsClient,args.index_name):
         print(f"Index {args.index_name} does not exist, creating")
-        EsClient.indices.create(index=args.index_name)    
+        EsClient.indices.create(index=args.index_name,body=mappings)    
     for f in files:
         doc = str(f.resolve())
+        if utils.fullpath_exists(EsClient,args.index_name,doc):
+            print(f"skipping {doc}, already indexed")
+            continue
         start_time=time()
         result=pdf_loader(doc)
         result["fullpath"]=doc
-        if utils.fullpath_exists(EsClient,args.index_name,result["fullpath"]):
-            print(f"skipping {doc}, already indexed")
-            continue
+        result["extension"]=f.suffix.lower().lstrip(".")
+
         EsClient.index(index=args.index_name, body=result)
         
         print(f"indexed {doc}, took {time()-start_time:.2f} seconds")

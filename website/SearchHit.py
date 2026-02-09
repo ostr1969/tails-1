@@ -5,6 +5,17 @@ from os import walk
 from typing import List
 from __init__ import CONFIG
 from collections.abc import Iterable
+from bs4 import BeautifulSoup
+
+def clean_html_keep_em_highlight(text: str) -> str:
+        soup = BeautifulSoup(text, "html.parser")
+
+        for tag in soup.find_all(True):
+            if tag.name == "em" and tag.get("class") == ["highlight"]:
+                continue
+            tag.unwrap()
+
+        return str(soup)
 
 @dataclass
 class SearchHit:
@@ -80,6 +91,8 @@ class SearchHit:
                 field_value = "...".join(self.hit["highlight"][display["field"]])
             if "max_length" in display and len(field_value) > display["max_length"]:
                 field_value = field_value[:display["max_length"]] + "..."
+            if  display["field"]=="content":
+                field_value=  clean_html_keep_em_highlight(field_value) 
             # format field according to styling information
             formatted = display["style"].replace("$VALUE", field_value)
             # collect data to table
@@ -89,7 +102,7 @@ class SearchHit:
     def hit_title(self):
         extention = str(self.get_field_value("file.extension")).upper()
         return "<a href=/view/{}/{} class=\"document-title\">{} file</a>".format(self.hit["_index"], self.hit["_id"], extention)
-    
+ 
 
     def make_html(self) -> str:
         """Make required html for presenting the hit in the search resutls"""

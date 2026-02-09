@@ -60,17 +60,11 @@ GET pdfs/_search?filter_path=*.*.*.meta.title,*.*.*.grobid.metadata.title,grobid
   }
 
 }
-GET heb/_search?filter_path=*.*.*.huridocs
+GET pdfs/_search?filter_path=*.*.*
 {
   "query": {
-    "bool": {
-      "must": [
-        {
-          "exists": {
-            "field": "huridocs"
-          }
-        }
-      ]
+    "term": {
+      "file.extension": "dwg"
     }
   }
 

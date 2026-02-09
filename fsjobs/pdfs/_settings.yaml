@@ -22,15 +22,13 @@ fs:
   json_support: false
   lang_detect: false
   ocr:
-    data_path: C:\install\tails\Tesseract-OCR\tessdata
     enabled: false
     language: eng
-    path: C:\install\tails\Tesseract-OCR
     pdf_strategy: auto
   raw_metadata: false
   remove_deleted: true
   store_source: false
   update_rate: 16m
-  url: /home/barako/Tails2/Sample/PHD_litreture
+  url: /home/barako/Tails/Samples/PHD_litreture
   xml_support: false
 name: pdfs

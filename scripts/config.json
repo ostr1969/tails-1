@@ -11,7 +11,7 @@
         "fonts_dir": "..\\DwgTextract\\Resources\\Fonts\\"
     },
     "semantic_model": {
-        "model_name": "LaBSE",
+        "transformer_model_name": "sentence-transformers/all-MiniLM-L6-v2",
         "content_embedding_field": "content_embedding",
         "filename_embedding_field": "filename_embedding",
         "content_field": "content",
@@ -30,5 +30,12 @@
         "FSCRAWLER_PORT": "8180",
         "FSCRAWLER_CONFIG": "../fsjobs",
         "ES_PATH": "/mnt/nvme1/Elastic"
+    },
+    "docling":{
+        "IGNORED_EXT":[".exe",".com",".dll",".so",".svg"],
+        "EXCLUDED_DIRS":[".git", "__pycache__", ".venv"],
+        "UNKNOWN_EXT":["",".sample"],
+        "NOCHUNK_EXT":[".csv",".py",".js",".sh",".json"]
+
     }
 }

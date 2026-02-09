@@ -1,0 +1,182 @@
+#!/bin/bash
+shopt -s expand_aliases
+alias PUT='curl  -H "Content-Type: application/json"   -XPUT '
+alias POST='curl  -H "Content-Type: application/json"   -XPOST '
+alias DELETE='curl  -H "Content-Type: application/json"   -XDELETE '
+alias GET='curl  -H "Content-Type: application/json"   -XGET '
+DELETE "http://localhost:9200/dlheb"
+echo
+
+PUT "http://localhost:9200/dlheb" -d'
+{
+    "mappings" : {
+    "properties": {
+        "extension": {
+            "type": "keyword"
+        },
+        "chunks": {
+            "properties": {
+                "items": {
+                    "properties": {
+                        "content_layer": {
+                            "type": "keyword"
+                        },
+                        "label": {
+                            "type": "keyword"
+                        },
+                        "prov": {
+                            "properties": {
+                                "bbox": {
+                                    "properties": {
+                                        "b": {
+                                            "type": "float"
+                                        },
+                                        "l": {
+                                            "type": "float"
+                                        },
+                                        "r": {
+                                            "type": "float"
+                                        },
+                                        "t": {
+                                            "type": "float"
+                                        }
+                                    }
+                                },
+                                "page_no": {
+                                    "type": "long"
+                                }
+                            }
+                        }
+                    }
+                },
+                "text": {
+                    "type": "text",
+					"analyzer":"custom_english",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                }
+            }
+        },
+        "fullpath": {
+                "fielddata": true,
+                "analyzer": "path_analyzer",
+                "type": "text"
+        },
+        "fulltext": {
+            "type": "text",
+			"analyzer":"custom_english",
+            "fields": {
+                "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                }
+            }
+        },
+        "metadata": {
+            "properties": {
+                "/Author": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "/CreationDate": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "/Creator": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "/ModDate": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "/Producer": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                }
+            }
+        },
+        "title": {
+            "type": "text",
+			"analyzer":"custom_english",
+            "fields": {
+                "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                }
+            }
+        }
+    }
+}
+	,
+    "settings" : {
+            "analysis": {
+              "filter": {
+                "english_stop": {
+                  "type": "stop",
+                  "stopwords": ["_english_","for","figure","figures","et","al",
+                  "using","used","however","thus","also","can","show",
+                  "shown","based","within","many","some","most","several","one","two","three"]
+                },
+                "english_stemmer": {
+                  "type": "stemmer",
+                  "language": "english"
+                },
+                "synonym_filter": {
+                  "type": "synonym",
+                  "lenient": true,
+                  "format": "wordnet",
+                  "synonyms_path": "analysis/wordnet_synonyms.txt",
+                  "expand": false
+                }
+              },
+              "analyzer": {
+                "custom_english": {
+                  "tokenizer": "standard",
+                  "filter": [
+                    "lowercase",
+                    "english_stop",
+                    "english_stemmer"
+                  ]
+                },
+                "path_analyzer": {
+                  "tokenizer": "pattern",
+                  "filter": [
+                    "lowercase"
+                  ]
+                }
+              }
+            }
+          }
+}
+
+'

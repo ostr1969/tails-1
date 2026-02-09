@@ -59,10 +59,13 @@ def search():
     
     total_hits = len(hits)
     hits = hits[start:end]
+    start,end=pagination_window(page,total_hits,3)
 
     return render_template(
         'search.html', 
         hits=hits, 
+        start=start,
+        end=end,
         total_hits=total_hits, 
         page=page, 
         query=query, 
@@ -71,7 +74,12 @@ def search():
         available_extensions=utils.get_available_extensions(EsClient),
         selected_extensions=selected_extensions
     )
-    
+
+
+def pagination_window(page, total_pages, window=2):
+        start = max(1, page - window)
+        end = min(total_pages, page + window)
+        return start, end    
 
 @app.route('/json/<index>/<file_id>', methods=['GET'])
 def json_view(index: str, file_id: str):
@@ -107,6 +115,24 @@ def log():
 
 @app.route('/view/<index>/<file_id>', methods=['GET'])
 def view(index: str, file_id: str):
+    """endpoint for viewing file"""
+    hit = EsClient.get(index=index, id=file_id)
+    path = hit["_source"]["path"]["real"]
+    # change base path in case files were moved after indexing
+    for base_path, new_path in CONFIG["base_paths"]:
+        if path.lower().startswith(base_path.lower()):
+            path = path.replace(base_path, new_path)
+    ext = hit["_source"]["file"]["extension"]
+    target = "files/{}.{}".format(file_id, ext)
+    copyfile(path, target)
+    if ext.lower() in CONFIG["open_file_types"]:
+        download = False
+    else:
+        download = True
+    return send_file(target, as_attachment=download)
+
+@app.route('/view1/<index>/<file_id>', methods=['GET'])
+def view1(index: str, file_id: str):
     """endpoint for viewing file"""
     words = request.args.get("words", "")
     words=",".join(words.split())
