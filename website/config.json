@@ -7,6 +7,7 @@
     "display_fields": [
         {"field": "huridocs.title", "display_name": "huridocsTitle", "style": "$VALUE","use_highlights": true},
         {"field": "grobid.metadata.title", "display_name": "grobidTitle", "style": "$VALUE","use_highlights": true},
+          {"field": "grobid.title", "display_name": "Title(grobid)", "style": "$VALUE","use_highlights": true},
         {"field": "meta.title", "display_name": "metaTitle", "style": "$VALUE","use_highlights": true},
          {"field": "title", "display_name": "Title", "style": "$VALUE","use_highlights": true},
         {"field": "file.extension", "display_name": "File Type", "style": "$VALUE","use_highlights": true},
@@ -14,8 +15,8 @@
         {"field": "path.real", "display_name": "Path", "style": "$VALUE","use_highlights": true},
         {"field": "file.created", "display_name": "Creation Time", "style": "$VALUE"},
         {"field": "content", "display_name": "Content", "style": "$VALUE", "use_highlights": true, "max_length": 1000},
-        {"field": "dwg_content.content", "display_name": "Content", "style": "$VALUE", "use_highlights": true, "max_length": 1000}
-
+        {"field": "dwg_content.content", "display_name": "Content", "style": "$VALUE", "use_highlights": true, "max_length": 1000},
+         {"field": "data.name", "display_name": "az", "style": "$VALUE"}
     ],
     "highlight_fields": [ "file.filename","dwg_content.file","content", "dwg_content.layers", "dwg_content.content", "dwg_content.contentrev",
      "dwg_content.imagenames", "path.real","huridocs.title", "grobid.metadata.title", "grobid.abstract.text", "meta.title"],

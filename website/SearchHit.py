@@ -1,3 +1,4 @@
+from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass
 from logging import root
@@ -17,11 +18,58 @@ def clean_html_keep_em_highlight(text: str) -> str:
 
         return str(soup)
 
+def merge_page_bounds(page_bounds_list):
+    acc = defaultdict(list)
+
+    # collect all page boxes
+    for page_bounds in page_bounds_list:
+        for page, bbox in page_bounds.items():
+            acc[page].append(bbox)
+
+    # merge per page
+    merged = {}
+    for page, boxes in acc.items():
+        merged[page] = {
+            "l": min(b["l"] for b in boxes),
+            "t": max(b["t"] for b in boxes),
+            "r": max(b["r"] for b in boxes),
+            "b": min(b["b"] for b in boxes),
+        }
+
+    return merged
+def bounding_boxes_by_page(prov):
+    pages = defaultdict(list)
+    #print("pp:",prov)
+    # group boxes by page
+    for item in prov:
+
+        #print(item["page_no"])
+        pages[item["page_no"]].append(item["bbox"])
+
+    # compute bounding square per page
+    result = {}
+
+    for page, boxes in pages.items():
+        #print("boxes",boxes)
+        result[page] = {
+            "l": min(b["l"] for b in boxes),
+            "t": max(b["t"] for b in boxes),
+            "r": max(b["r"] for b in boxes),
+            "b": min(b["b"] for b in boxes),
+        }
+
+    return result
+
+
 @dataclass
 class SearchHit:
 
     hit: dict
     display_fields: dict
+    chunk_dict: dict
+    chunkids: list
+
+ 
 
     def get_field_value_obselete(self, field: str):
         """get the field value. field given in plain text"""
@@ -102,7 +150,28 @@ class SearchHit:
     def hit_title(self):
         extention = str(self.get_field_value("file.extension")).upper()
         return "<a href=/view/{}/{} class=\"document-title\">{} file</a>".format(self.hit["_index"], self.hit["_id"], extention)
- 
+    def hit_chunks(self):
+        chunks=[]
+
+        for chunk in self.hit.get("s_chunks", []):#selected matched chanks
+
+            pages=[]
+            provboxes=[]
+            for item in chunk.get("items",[]):
+
+                prov=  item.get("prov", [])
+
+
+                pbound=bounding_boxes_by_page(prov)
+                provboxes.append(pbound)
+            itemsbound=merge_page_bounds(provboxes)
+
+            chunk["bounds"]=itemsbound
+
+            #print("text:",chunk["text"],"bound:",itemsbound)
+            chunks.append(itemsbound)
+        return chunks
+
 
     def make_html(self) -> str:
         """Make required html for presenting the hit in the search resutls"""
@@ -117,5 +186,5 @@ class SearchHit:
 def hits_from_resutls(results) -> List[SearchHit]:
     ajr = []
     for hit in results:
-        ajr.append(SearchHit(hit, CONFIG["display_fields"]))
+        ajr.append(SearchHit(hit, CONFIG["display_fields"],{},[]))
     return ajr

@@ -145,9 +145,12 @@ def aggregate_max_score(chunk_hits: List[Dict]) -> Dict[str, float]:
         doc_id = hit["_source"]["doc_id"]
         doc_index = hit["_index"].replace("_chunks", "")    
         score = hit["_score"]
-        print(f"Doc {doc_index}/{doc_id} score: {score}")
+        score_name=f"{doc_index}/{doc_id}"
+        hit["_source"]["id"]=hit["_id"]
+
+        print(f"Doc {score_name} score: {score}")
         if doc_id not in doc_scores or score > doc_scores[doc_id]:
-            doc_scores[f"{doc_index}/{doc_id}"] = score
+            doc_scores[f"{score_name}"] = score
 
     return doc_scores
 

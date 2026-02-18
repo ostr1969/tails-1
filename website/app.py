@@ -59,6 +59,16 @@ def search():
     
     total_hits = len(hits)
     hits = hits[start:end]
+    ghits={}
+    for h in hits:
+        dataname=h.hit["_source"].get("data",{}).get("name",{})
+        if dataname!={}:
+            if dataname not in ghits:
+                ghits[dataname]=[h]
+            else:
+                ghits[dataname].append(h)
+    total_hits = len(hits)
+    hits = hits[start:end]
     start,end=pagination_window(page,total_hits,3)
 
     return render_template(

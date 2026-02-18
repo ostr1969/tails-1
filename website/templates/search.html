@@ -340,6 +340,69 @@
         .result-content {
             padding-right: 120px;
         }
+        .counter {
+            display: inline-block;
+            margin: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            
+            cursor: pointer;
+            font-weight: bold;
+            position: relative;
+            direction: rtl; /* only this element and its children are RTL */
+            text-align: right;
+        }
+
+        .tooltip {
+            display: none;
+            position: fixed;              /* float above everything */
+            background: #797676;
+            color: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            width: 800px;                 /* wider tooltip */
+            max-width: 80vw;
+            white-space: pre-line;        /* preserve \n */
+            z-index: 9999;                /* above all */
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            top: 100px;                   /* adjust if needed */
+            right: 100px;                 /* adjust if needed */
+            text-align: right;
+            direction: rtl;               /* text is Hebrew */
+        }
+
+        .counter:hover .tooltip {
+            display: block;
+        }
+        .tooltip-pages {
+            font-weight: bold;
+            font-size: 0.95em;
+            margin-bottom: 6px;
+            padding: 4px 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .tooltip-text {
+            font-size: 0.9em;
+            line-height: 1.4em;
+        }
+        .counter-link {
+            display: inline-block;
+            background: #4a90e2;       /* blue background */
+            color: #fff;               /* white text */
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;           /* shows hand cursor */
+            transition: background 0.2s;
+        }
+
+        .counter-link:hover {
+            background: #357ab8;       /* darker blue on hover */
+        }
     </style>
 </head>
 <body>
