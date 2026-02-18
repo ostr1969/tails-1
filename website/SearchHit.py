@@ -7,6 +7,7 @@ from typing import List
 from __init__ import CONFIG
 from collections.abc import Iterable
 from bs4 import BeautifulSoup
+from utils import build_pagespan_map
 
 def clean_html_keep_em_highlight(text: str) -> str:
         soup = BeautifulSoup(text, "html.parser")
@@ -68,6 +69,7 @@ class SearchHit:
     display_fields: dict
     chunk_dict: dict
     chunkids: list
+    title_fields: list
 
  
 
@@ -145,7 +147,13 @@ class SearchHit:
             formatted = display["style"].replace("$VALUE", field_value)
             # collect data to table
             table_rows.append((display["display_name"], formatted))
-        return table_rows
+        titles=[]   
+        for display in self.title_fields:
+                field_value = str(self.get_field_value(display))
+                if field_value is None or field_value=="None" or field_value=="" or field_value=="[]":
+                    continue
+                titles.append(field_value)
+        return titles,table_rows
     
     def hit_title(self):
         extention = str(self.get_field_value("file.extension")).upper()
@@ -154,7 +162,7 @@ class SearchHit:
         chunks=[]
 
         for chunk in self.hit.get("s_chunks", []):#selected matched chanks
-
+            print(chunk)
             pages=[]
             provboxes=[]
             for item in chunk.get("items",[]):
@@ -170,21 +178,53 @@ class SearchHit:
 
             #print("text:",chunk["text"],"bound:",itemsbound)
             chunks.append(itemsbound)
+        print("chunks:",chunks)
         return chunks
 
 
     def make_html(self) -> str:
         """Make required html for presenting the hit in the search resutls"""
-        table_rows = self.hit_to_table()
+        titles,table_rows = self.hit_to_table()
         # convert table to HTML
         s = "<table class=\"document-table\">"
+        s += f'''<tr><td class=\"key\">title</td><td class=\"tvalue\">{titles[0]}
+         <div class="tooltip">
+                    <div class="tooltip-text">{ "\n".join(titles) }</div>
+            </div>
+        </td></tr>'''
         for name, value in table_rows:
             s += "<tr><td class=\"key\">{}</td><td class=\"value\">{}</td></tr>".format(name, value)
         s += "</table>"
+        
+        for i,c in enumerate(self.chunk_dict.items()):
+            pages=c[1][0]
+            text=c[1][1]
+            s+= f'''<div class="counter">
+            <a href="/view/{self.hit["_index"]}/{self.hit["_id"]}#page={pages[0]}" class="counter-link">
+                {i}
+            </a>
+            <div class="tooltip">
+                    <div class="tooltip-pages">Pages: {pages }</div>
+                    <div class="tooltip-text">{ text }</div>
+            </div>
+             </div>
+            '''
+
         return s
 
 def hits_from_resutls(results) -> List[SearchHit]:
     ajr = []
+    #for hit in results:
+    #    ajr.append(SearchHit(hit, CONFIG["display_fields"],{},[]))
     for hit in results:
-        ajr.append(SearchHit(hit, CONFIG["display_fields"],{},[]))
+        if "s_chunks" in hit:
+            chunkids=[u["id"] for u in hit["s_chunks"]]
+            #print(chunkids)
+            chunksdict=build_pagespan_map(hit["s_chunks"]) #{(3,4,):asdfaf,{5,6}:sdfasftrrty}
+        else:
+            chunkids=[]
+            chunksdict={}
+
+        ajr.append(SearchHit(hit, CONFIG["display_fields"],chunksdict,chunkids,CONFIG["title_fields"]))
+
     return ajr

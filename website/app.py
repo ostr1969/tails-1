@@ -56,6 +56,17 @@ def search():
 
     # Extract relevant information from the result
     hits = hits_from_resutls(result)
+    for hit in hits:
+        #hit.hit["r_chunks"]=hit.hit_chunks() # if lexical than its empty , convert s_chunks, to r_chunks which is only the blocks
+        if "s_chunks" in hit.hit:
+            #sl=[list(k.keys()) for k in hit.hit["r_chunks"]]
+            
+            #print(hit.chunk_dict)
+            pages_set = hit.chunk_dict
+            hit.hit["_source"]["chunks_pages"]=list(pages_set)
+            #print(list(pages_set))
+
+    
     
     total_hits = len(hits)
     hits = hits[start:end]

@@ -148,9 +148,17 @@ def aggregate_max_score(chunk_hits: List[Dict]) -> Dict[str, float]:
         score_name=f"{doc_index}/{doc_id}"
         hit["_source"]["id"]=hit["_id"]
 
-        print(f"Doc {score_name} score: {score}")
-        if doc_id not in doc_scores or score > doc_scores[doc_id]:
-            doc_scores[f"{score_name}"] = score
+        #print(f"Doc {score_name} score: {score}")
+        #if doc_id not in doc_scores or score > doc_scores[doc_id]:
+        #    doc_scores[f"{score_name}"] = score
+        if score_name not in doc_scores :
+            doc_scores[f"{score_name}"]={"score": score}
+            doc_scores[f"{score_name}"]["s_chunks"]=[hit["_source"]]
+            continue
+        if score > doc_scores[score_name]["score"]:
+                doc_scores[f"{score_name}"]={"score": score}
+        doc_scores[f"{score_name}"]["s_chunks"].append(hit["_source"])
+
 
     return doc_scores
 
@@ -158,7 +166,7 @@ def aggregate_max_score(chunk_hits: List[Dict]) -> Dict[str, float]:
 def fetch_documents(es_client, doc_scores: Dict[str, float], limit: int, selected_extensions: List[str], query: str) -> List[Dict]:
     ranked = sorted(
         doc_scores.items(),
-        key=lambda x: x[1],
+        key=lambda x: x[1]["score"],
         reverse=True
     )
 
@@ -173,7 +181,7 @@ def fetch_documents(es_client, doc_scores: Dict[str, float], limit: int, selecte
             
     }
     
-    for did, _ in ranked:
+    for did, v in ranked:
         doc_index, doc_id = did.split("/")
         base_query={
      "query": {
@@ -184,6 +192,7 @@ def fetch_documents(es_client, doc_scores: Dict[str, float], limit: int, selecte
         #document = es_client.get(index=doc_index, id=doc_id)
         result = es_client.search(index=doc_index, body=base_query,size=1,highlight=highlight )
         document = result["hits"]["hits"][0]
+        document["s_chunks"]=v["s_chunks"]
         if len(selected_extensions) == 0 or document["_source"].get("file", {}).get("extension") in selected_extensions:
             filtered_documents.append(document)
 
@@ -265,6 +274,30 @@ def similar_documents(es_client, document_id: str, document_index: str, ndocs: i
     result = es_client.search(index=document_index, body=base_query, size=ndocs)
     
     return result["hits"]["hits"]
+
+def build_pagespan_map(chunks):
+    result = {}
+
+    for chunk in chunks:
+        chunk_id = chunk.get("id")
+        text = chunk.get("text", "")
+        #print(chunk)
+        # collect unique page numbers from docling
+        # pages = {
+        #     prov["page_no"]
+        #     for item in chunk.get("items", [])
+        #     for prov in item.get("prov", [])
+        # }
+        pages=chunk["pages"]
+        if not pages or not chunk_id:
+            continue
+
+        pages_tuple = tuple(sorted(pages))  # hashable
+
+        result[chunk_id] = [pages_tuple, text]
+        #print(result)
+    return result
+
 
 def build_rag_prompt_messages(
     chunks: List[Dict[str, str]],
