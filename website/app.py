@@ -14,14 +14,15 @@ import utils
 import fscrawlerUtils as fsutils
 from SearchHit import hits_from_resutls
 from __init__ import app, EsClient, CONFIG, EmbeddingModel
+from flask import session
+app.secret_key = "somekey"
 
-session_data = {}
 
 @app.route('/', methods=['GET', 'POST'])
 def search():
     # Pagination
     if request.method == "GET":
-        session_data.clear()
+        session.clear()
     page = int(request.args.get('page', 1))
     start = (page - 1) * CONFIG["results_per_page"]
     end = start + CONFIG["results_per_page"]
@@ -30,13 +31,10 @@ def search():
     semantic_search = request.form.get('search_mode', 'normal') != 'normal'
     semantic_search = True if semantic_search else False
     selected_extensions = request.form.getlist('file_extensions')
-    session_data["selected_extensions"] = selected_extensions    
-    session_data["query"] = query
-    session_data["semantic_search"] = semantic_search
+    session["selected_extensions"] = selected_extensions    
+    session["query"] = query
+    session["semantic_search"] = semantic_search
     
-    #print(session_data)
-    
-     # If no query is provided, return empty results
      
     #print("query:", query, "semantic_search:", semantic_search, "selected_extensions:", selected_extensions)
     if len(query) == 0:
@@ -62,12 +60,10 @@ def search():
     for hit in hits:
         #hit.hit["r_chunks"]=hit.hit_chunks() # if lexical than its empty , convert s_chunks, to r_chunks which is only the blocks
         if "s_chunks" in hit.hit:
-            #sl=[list(k.keys()) for k in hit.hit["r_chunks"]]
-            
-            #print(hit.chunk_dict)
+           
             pages_set = hit.chunk_dict
             hit.hit["_source"]["chunks_pages"]=list(pages_set)
-            #print(list(pages_set))
+           
 
     
     
@@ -100,6 +96,9 @@ def search():
 
 @app.route('/more/<file_id>', methods=['POST','GET'])
 def more(file_id: str):
+    page = int(request.args.get('page', 1))
+    start = (page - 1) * CONFIG["results_per_page"]
+    end = start + CONFIG["results_per_page"]
     similar_fields=utils.get_config("similar_document_fields")
     results = utils.similar_documents(EsClient, file_id, CONFIG["index"], utils.get_config("results_per_page"),similar_fields)
     hits = hits_from_resutls(results)
@@ -107,12 +106,15 @@ def more(file_id: str):
     ghits=utils.orderGroups(hits)
     utils.insertLog(CONFIG["index"],"similar_to:"+file_id,[],"similar")          
     total_hits = len(ghits)
+    start,end=pagination_window(page,total_hits,3)
     
     #print("HITS:", hits[0])
     return render_template('search.html', 
         hits=hits, 
         total_hits=total_hits, 
-        page=1, 
+        page=page, 
+        start=start,
+        end=end,
         query=f"similar_to:{file_id}",
         results_per_page=CONFIG["results_per_page"],
         semantic_search=False,
@@ -126,19 +128,37 @@ def search_help():
     
 @app.route('/filter/<file_id>/<prop>', methods=['POST','GET'])
 def filter(file_id: str,prop:str):
-    results = utils.similar_documents(EsClient, file_id, CONFIG["index"], utils.get_config("results_per_page"),[prop])
-    hits = hits_from_resutls(results)
+    page = int(request.args.get('page', 1))
+    start = (page - 1) * CONFIG["results_per_page"]
+    end = start + CONFIG["results_per_page"]
+
+    query = session["query"]
+    current=EsClient.get(index=CONFIG["index"],id=file_id)
+    propval=utils.get_es_value(current,prop)
+    
+    result = utils.lexical_search_documents(EsClient, query, [],prop,propval)
+    hits = hits_from_resutls(result)
+       
     total_hits = len(hits)
+    print("found:",total_hits)
+    #hits = hits[start:end]
     ghits=utils.orderGroups(hits)
-    utils.insertLog(CONFIG["index"],"similar_to:"+file_id+","+prop,[],"similar")          
+              
     total_hits = len(ghits)
+    ghits = ghits[start:end]
+    start,end=pagination_window(page,total_hits,3)
+   
+    utils.insertLog(CONFIG["index"],query+":"+prop,[],"filter")
+    
     
     #print("HITS:", hits[0])
     return render_template('search.html', 
         hits=hits, 
         total_hits=total_hits, 
-        page=1, 
-        query=f"similar_to:{file_id}:{prop}",
+        page=page, 
+        start=start,
+        end=end,
+        query=query,
         results_per_page=CONFIG["results_per_page"],
         semantic_search=False,
         available_extensions=utils.get_available_extensions(EsClient),

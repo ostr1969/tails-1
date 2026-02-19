@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 import datetime
 from typing import Dict, List
 from sentence_transformers import SentenceTransformer
@@ -67,6 +68,38 @@ If the user asks for:
 Your goal:
 Produce a faithful, well-cited answer grounded strictly in the retrieved document content.
 """
+def get_es_value(hit, field: str):
+        parts = field.split(".")
+        root = deepcopy(hit["_source"])
+
+        def walk(value, idx):
+            if idx == len(parts):
+                return [value]
+
+            key = parts[idx]
+            results = []
+
+            if isinstance(value, dict):
+                if key in value:
+                    results.extend(walk(value[key], idx + 1))
+
+            elif isinstance(value, list):
+                for item in value:
+                    results.extend(walk(item, idx))
+
+            return results
+        values = walk(root, 0)
+
+    # remove None / empty
+        values = [v for v in values if v not in (None, "", [])]
+
+        if not values:
+            return None
+
+        if len(values) == 1:
+            return values[0]
+
+        return " ".join(map(str, values))
 def get_installed_pairs():
     pairs = []
     installed_languages = argostranslate.translate.get_installed_languages()
@@ -250,7 +283,8 @@ def semantic_search_documents(es_client, chunk_index, nchunks, ndocs, model, que
     doc_scores = aggregate_max_score(chunk_hits)
     return fetch_documents(es_client, doc_scores, ndocs, selected_extensions,query)
 
-def lexical_search_documents(es_client, query: str, allowed_extensions: List[str]):
+def lexical_search_documents(es_client, query: str, allowed_extensions: List[str],*args):
+    
     base_query = {
     "query": {
         "bool": {
@@ -265,6 +299,9 @@ def lexical_search_documents(es_client, query: str, allowed_extensions: List[str
         }
     }
     }
+    if len(args)==2:
+        filt={"term":{args[0]:args[1]}}
+        base_query["query"]["bool"]["must"].append(filt)
     fields={field: {"highlight_query": {"match": {field: query}}} for field in get_config("highlight_fields")}
     highlight={
             'fields': fields,
