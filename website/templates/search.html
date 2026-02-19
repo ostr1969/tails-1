@@ -238,6 +238,11 @@
                             <div class="search-bar-container">
                                 <input type="text" id="query" name="query" value="{{ query }}" placeholder="Search your documents..." required>
                                 <input type="hidden" id="search_mode" name="search_mode" value="normal">
+                                 <!-- Query Help Link -->
+                                <a href="/help" target="_blank" 
+                                style="font-size: 12px; color: var(--muted-text-color); text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                                    <span style="font-weight: bold;">?</span> Query help
+                                </a>
                                 <div class="search-actions">
                                     <button type="submit" class="search-action-btn" id="search-btn" onclick="setSearchMode('normal')">
                                         <img src="{{ url_for('static', filename='images/search_color.png') }}" alt="Search" style="width: 24px; height: 24px;">

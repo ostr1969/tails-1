@@ -119,6 +119,10 @@ def more(file_id: str):
         available_extensions=utils.get_available_extensions(EsClient),
         selected_extensions=[],
         ghits=ghits)
+
+@app.route("/help")
+def search_help():
+    return render_template("queryhelp.html")
     
 @app.route('/filter/<file_id>/<prop>', methods=['POST','GET'])
 def filter(file_id: str,prop:str):
