@@ -6,10 +6,6 @@
     "open_file_types": ["pdf", "jpeg", "png"],
     "display_fields": [
        
-       
-        
-        
-        {"field": "file.extension", "display_name": "File Type", "style": "$VALUE","use_highlights": true},
         {"field": "grobid.abstract.text", "display_name": "Abstract", "style": "$VALUE","use_highlights": true, "max_length": 1000},
         {"field": "path.real", "display_name": "Path", "style": "$VALUE","use_highlights": true},
         {"field": "file.created", "display_name": "Creation Time", "style": "$VALUE"},

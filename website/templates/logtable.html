@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Elasticsearch Table</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #f2f2f2;
+        }
+        .toolbar {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <a href="/export/csv">
+            <button>Export CSV</button>
+        </a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Index</th>
+                <th>Query</th>
+                <th>Extensions</th>
+                <th>Search Type</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rows %}
+            <tr>
+                <td>{{ r.index }}</td>
+                <td>{{ r.query }}</td>
+                <td>{{ r.extensions }}</td>
+                <td>{{ r.search_type }}</td>
+                <td>{{ r.date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,6 +1,8 @@
+from collections import defaultdict
+import datetime
 from typing import Dict, List
 from sentence_transformers import SentenceTransformer
-from __init__ import  EmbeddingModel
+from __init__ import  EmbeddingModel,EsClient,CONFIG
 import json
 import ollama
 
@@ -63,8 +65,33 @@ If the user asks for:
 Your goal:
 Produce a faithful, well-cited answer grounded strictly in the retrieved document content.
 """
+def fetch_rows(limit=1000):
+    resp = EsClient.search(
+        index=CONFIG["index"]+"_logs",
+        size=limit,
+        query={"match_all": {}},
+        sort=[{"date": {"order": "desc"}}]
+    )
 
+    rows = []
+    for hit in resp["hits"]["hits"]:
+        src = hit["_source"]
+        rows.append({
+            "index": src.get("index"),
+            "query": src.get("query"),
+            "extensions": ", ".join(src.get("extensions", [])),
+            "search_type": src.get("search_type"),
+            "date": src.get("date"),
+        })
 
+    return rows
+def insertLog(index:str,query:str,extensions:list,search_type):
+    doc={"index":index,
+         "query":query,
+         "extensions":extensions,
+         "search_type":search_type,
+         "date": datetime.datetime.now().isoformat()}
+    EsClient.index(index=f"{index}_logs", document=doc)
 def get_config(key: str):
     with open("config.json") as f:
         d = json.load(f)
@@ -207,18 +234,18 @@ def semantic_search_documents(es_client, chunk_index, nchunks, ndocs, model, que
 
 def lexical_search_documents(es_client, query: str, allowed_extensions: List[str]):
     base_query = {
-        'query': {
-            'bool': {
-                'must': [
-                    {
-                        'query_string': {
-                            'query': query,
-                            'fields': get_config("search_fields")
-                        }
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "query_string": {
+                        "query": query,
+                        "fields": get_config("search_fields")
                     }
-                ]
-            }
+                }
+            ]
         }
+    }
     }
     fields={field: {"highlight_query": {"match": {field: query}}} for field in get_config("highlight_fields")}
     highlight={
@@ -243,6 +270,49 @@ def lexical_search_documents(es_client, query: str, allowed_extensions: List[str
     #print("Lexical search found", result["hits"]["hits"][0])
     return result["hits"]["hits"]
 
+def buildLog(index_name):
+    es=EsClient
+    index_name = index_name+"_logs"
+
+    mapping = {
+        "mappings": {
+            "properties": {
+                "query": {"type": "text"},
+                "date": {"type": "date"},
+                "search_type": {"type": "keyword"},
+                "extensions": {"type": "keyword"},
+                "index": {"type": "keyword"}
+            }
+        }
+    }
+
+    if not es.indices.exists(index=index_name):
+        es.indices.create(index=index_name, body=mapping)
+
+def orderGroups(hits):
+    groups = defaultdict(list)
+    singletons = []
+
+    for hit in hits:
+        name = hit.hit["_source"].get("data", {}).get("name")
+        if name:
+            groups[name].append(hit)
+        else:
+            # items without name are their own group
+            singletons.append([hit])
+
+    # Sort each group descending by _score
+    for group_hits in groups.values():
+        group_hits.sort(key=lambda x: x.hit["_score"], reverse=True)
+
+    # Combine groups and singletons
+    all_groups = list(groups.values()) + singletons
+
+    # Sort all groups by the group's max _score
+    all_groups.sort(key=lambda g: g[0].hit["_score"], reverse=True)
+    #for g in all_groups:
+    #    print([h.hit["_score"] for h in g])
+    return all_groups
 
 def similar_documents(es_client, document_id: str, document_index: str, ndocs: int) -> List[Dict]:
     """

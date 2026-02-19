@@ -46,6 +46,18 @@ def addTitles():
              "grobid":{"title":f"gtitle{i}"},
              "huridocs":{"title":f"htitle{i}"},
              "data":{"title":f"dtitle{i}"}} 
-        es.update(index="pdfs",id=hit["_id"],doc=doc)     
+        es.update(index="pdfs",id=hit["_id"],doc=doc)   
+def fixextension():
+    resp=es.search(index="pdfs",query={"multi_match":{"query":"program"}},size=350)
+    for hit in resp["hits"]["hits"]:
+        pat=Path(hit['_source']["path"]["real"])
+        #print(pat.suffix,hit['_source']["file"]["extension"])  
+        doc={
+                    "file": {
+                    "extension": pat.suffix.replace(".","")
+                    }
+                }
+        print(doc)
+        es.update(index="pdfs",id=hit["_id"],doc=doc)         
 if __name__=="__main__":
-    addTitles()        
+    fixextension()        

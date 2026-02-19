@@ -69,4 +69,30 @@ GET pdfs/_search?filter_path=*.*.*
   }
 
 }
-get pdfs/_doc/86eed63a3401439c54b727a686a841e
+get pdfs/_search
+{ "query": {
+        "bool": {
+            "must": [
+                {
+                    "query_string": {
+                        "query": "equations to estimate length and threedimensional"
+                        
+                    }
+                }
+            ]
+        }
+    }}
+get pdfs/_search
+{
+  "query": {
+    "bool": {
+      "must_not": [
+        {
+          "exists": {
+            "field": "file.extension"
+          }
+        }
+      ]
+    }
+  }
+}

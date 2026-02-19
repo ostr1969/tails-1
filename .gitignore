@@ -8,3 +8,6 @@ files/
 pdfjs/
 !withquery.js
 !viewer.html
+jquery/
+bootstrap/
+bootstrap4/

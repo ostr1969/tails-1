@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='jquery/jquery-ui-1.14.2/jquery-ui.min.css') }}">
+    <script src="{{ url_for('static', filename='jquery/jquery-4.0.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery/jquery-ui-1.14.2/jquery-ui.min.js') }}"></script>
+   
+  
     <title>tails</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+   
     <style>
         .pagination {
             display: flex;
@@ -46,212 +53,7 @@
             margin-right: 400px;
         }
         
-        .search-page-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        
-        .search-header {
-            padding: 20px;
-            background: white;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .search-top-bar {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .search-logo {
-            height: 50px;
-            width: auto;
-            flex-shrink: 0;
-        }
-        
-        .search-form-wrapper {
-            flex: 1;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .search-bar-container {
-            position: relative;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            background: white;
-            border: 2px solid var(--primary-color);
-            border-radius: 50px;
-            box-shadow: 0 2px 10px rgba(0, 123, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .search-bar-container:focus-within {
-            border-color: var(--primary-hover);
-            box-shadow: 0 4px 20px rgba(0, 123, 255, 0.2);
-        }
-        
-        .search-bar-container input {
-            flex: 1;
-            padding: 18px 25px;
-            font-size: 18px;
-            border: none;
-            background: transparent;
-            outline: none;
-        }
-        
-        .search-actions {
-            display: flex;
-            gap: 5px;
-            padding-right: 5px;
-        }
-        
-        .search-action-btn {
-            padding: 10px;
-            width: 40px;
-            height: 40px;
-            font-size: 18px;
-            background-color: transparent;
-            color: var(--primary-color);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            margin: 0;
-        }
-        
-        .search-action-btn:hover {
-            background-color: var(--primary-color);
-            color: white;
-            transform: scale(1.1);
-        }
-        
-        .search-action-btn.active {
-            background-color: var(--primary-color);
-        }
-        
-        .search-action-btn .tooltip {
-            position: absolute;
-            bottom: -35px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        
-        .search-action-btn:hover .tooltip {
-            opacity: 1;
-        }
-        
-        .filter-dropdown-btn {
-            padding: 12px;
-            width: 45px;
-            height: 45px;
-            font-size: 20px;
-            background-color: transparent;
-            color: var(--primary-color);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            margin: 0;
-        }
-        
-        .filter-dropdown-btn:hover {
-            background-color: var(--primary-color);
-            color: white;
-            transform: scale(1.1);
-        }
 
-        .filter-dropdown-btn img {
-            pointer-events: none;
-        }
-        
-        .filter-dropdown-btn .tooltip {
-            position: absolute;
-            bottom: -35px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        
-        .filter-dropdown-btn:hover .tooltip {
-            opacity: 1;
-        }
-        
-        .filter-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .filter-dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 50px;
-            background-color: white;
-            min-width: 250px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            padding: 20px;
-            z-index: 1000;
-            border: 1px solid var(--border-light);
-        }
-        
-        .filter-dropdown-content.show {
-            display: block;
-        }
-        
-        .filter-dropdown-content h4 {
-            margin: 0 0 15px 0;
-            font-size: 16px;
-        }
-        
-        .filter-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        
-        .filter-option label {
-            font-weight: normal;
-            margin: 0;
-        }
-        
-        .search-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
         
         .results-header {
             display: flex;
@@ -277,7 +79,7 @@
         
         .result-item:hover {
             box-shadow: 0 4px 16px rgba(0, 123, 255, 0.15);
-            transform: translateY(-2px);
+           
         }
         
         .result-actions {
@@ -349,8 +151,8 @@
             cursor: pointer;
             font-weight: bold;
             position: relative;
-            direction: rtl; /* only this element and its children are RTL */
-            text-align: right;
+            
+            text-align: left;
         }
 
         .tooltip {
@@ -366,7 +168,7 @@
             z-index: 9999;                /* above all */
             box-shadow: 0 6px 20px rgba(0,0,0,0.4);
             top: 100px;                   /* adjust if needed */
-            right: 100px;                 /* adjust if needed */
+            right: 600px;                 /* adjust if needed */
             text-align: left;
             
         }
@@ -406,6 +208,7 @@
         .counter-link:hover {
             background: #357ab8;       /* darker blue on hover */
         }
+       
     </style>
 </head>
 <body>
@@ -467,7 +270,11 @@
                     </div>
                 </div>
             </div>
-            
+            <script>
+                $( function() {
+                    $( "#tabs" ).tabs();
+                } );
+            </script>
             <!-- Main Content Area -->
             <div class="search-content">
                 <div class="results-header">
@@ -477,32 +284,56 @@
                     <h3>No files to display</h3>
                     {% endif %}
                 </div>
-            
-                <div class="grid-container" style="margin: 0;">
-                    {% for hit in hits %}
-                        <div class="result-item">
-                            <div class="result-actions">
-                                <button class="result-action-btn" id="download-doc-{{ loop.index }}"
-                                    onclick="window.open('/view/{{ hit.hit["_index"] }}/{{ hit.hit["_id"] }}?words={{query}}', '_blank')">
-                                    <img src="{{ url_for('static', filename='images/download_color.png') }}" alt="Download" style="width: 24px; height: 24px;">
-                                    <span class="tooltip">Download</span>
-                                </button>
-                                <button class="result-action-btn" id="chat-doc-{{ loop.index }}" onclick="toggleChatWithDocument('{{ hit.hit["_id"] }}', this)">
-                                    <img src="{{ url_for('static', filename='images/chat_color.png') }}" alt="Chat" style="width: 24px; height: 24px;">
-                                    <span class="tooltip">Chat with Document</span>
-                                </button>
-                                <button class="result-action-btn" id="similar-doc-{{ loop.index }}"
-                                    onclick="window.location.href='/more/{{ hit.hit["_id"] }}'">
-                                    <img src="{{ url_for('static', filename='images/similar_docs_color.png') }}" alt="Similar" style="width: 24px; height: 24px;">
-                                    <span class="tooltip">More like this</span>
-                                </button>
+             {% for ghit in ghits %}    
+                {% set toploop = loop %}
+                <div id="tabs-{{ loop.index }}">
+                        <ul>
+                            {% for hit in ghit%}
+                            <li><a href="#itabs-{{ toploop.index }}-{{loop.index}}">{{hit.extension}}</a></li>
+                            {% endfor %}
+                        </ul>
+                        {% for hit in ghit%}
+                            <div id="itabs-{{ toploop.index }}-{{loop.index}}">
+                                <div class="result-item">
+                                    <div class="result-actions">
+                                        <button class="result-action-btn" id="download-doc-{{ loop.index }}"
+                                            onclick="window.open('/view/{{ hit.hit["_index"] }}/{{ hit.hit["_id"] }}?words={{query}}', '_blank')">
+                                            <img src="{{ url_for('static', filename='images/download_color.png') }}" alt="Download" style="width: 24px; height: 24px;">
+                                            <span class="tooltip">Download</span>
+                                        </button>
+                                        <button class="result-action-btn" id="chat-doc-{{ loop.index }}" onclick="toggleChatWithDocument('{{ hit.hit["_id"] }}', this)">
+                                            <img src="{{ url_for('static', filename='images/chat_color.png') }}" alt="Chat" style="width: 24px; height: 24px;">
+                                            <span class="tooltip">Chat with Document</span>
+                                        </button>
+                                        <button class="result-action-btn" id="similar-doc-{{ loop.index }}"
+                                            onclick="window.location.href='/more/{{ hit.hit["_id"] }}'">
+                                            <img src="{{ url_for('static', filename='images/similar_docs_color.png') }}" alt="Similar" style="width: 24px; height: 24px;">
+                                            <span class="tooltip">More like this</span>
+                                        </button>
+                                         <button class="result-action-btn" id="json-{{ loop.index }}"
+                                            onclick="window.location.href='/json/{{ hit.hit["_index"] }}/{{ hit.hit["_id"] }}'">
+                                            <img src="{{ url_for('static', filename='images/send.png') }}" alt="json" style="width: 24px; height: 24px;">
+                                            <span class="tooltip">json</span>
+                                        </button>
+                                    </div>
+                           
+                                    <div class="result-content">
+                                        {{ hit.make_html()|safe }}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="result-content">
-                                {{ hit.make_html()|safe }}
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
+                         {% endfor %}
+                    </div>
+             {% endfor %}
+             <script>
+                document.querySelectorAll('[id^="tabs-"]').forEach(el => {
+                    $(el).tabs();
+                });
+               
+
+                
+            </script>
+               
                 {% set total_pages = (total_hits // results_per_page) + (1 if total_hits % results_per_page else 0) %}
                 {% if total_hits > results_per_page %}
                     <div class="pagination">
@@ -528,6 +359,18 @@
     </div>
 
     <script>
+         const buttons = document.querySelectorAll(".tab-buttons button");
+        const contents = document.querySelectorAll(".tab-content");
+
+        buttons.forEach(btn => {
+            btn.addEventListener("click", () => {
+            buttons.forEach(b => b.classList.remove("active"));
+            contents.forEach(c => c.classList.remove("active"));
+
+            btn.classList.add("active");
+            document.getElementById(btn.dataset.tab).classList.add("active");
+            });
+        });
         function setSearchMode(mode) {
             document.getElementById('search_mode').value = mode;
         }

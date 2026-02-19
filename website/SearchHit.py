@@ -70,6 +70,7 @@ class SearchHit:
     chunk_dict: dict
     chunkids: list
     title_fields: list
+    extension: str
 
  
 
@@ -187,14 +188,17 @@ class SearchHit:
         titles,table_rows = self.hit_to_table()
         # convert table to HTML
         s = "<table class=\"document-table\">"
-        s += f'''<tr><td class=\"key\">title</td><td class=\"tvalue\">{titles[0]}
-         <div class="tooltip">
-                    <div class="tooltip-text">{ "\n".join(titles) }</div>
-            </div>
-        </td></tr>'''
+        if len(titles)>0:
+            #print(titles)
+            s += f'''<tr><td class=\"key\">title</td><td class=\"tvalue\">{titles[0]}
+                <div class="tooltip">
+                        <div class="tooltip-text">{ "\n".join(titles) }</div>
+                </div>
+            </td></tr>'''
         for name, value in table_rows:
             s += "<tr><td class=\"key\">{}</td><td class=\"value\">{}</td></tr>".format(name, value)
         s += "</table>"
+        #print(s+"\n")
         
         for i,c in enumerate(self.chunk_dict.items()):
             pages=c[1][0]
@@ -224,7 +228,7 @@ def hits_from_resutls(results) -> List[SearchHit]:
         else:
             chunkids=[]
             chunksdict={}
-
-        ajr.append(SearchHit(hit, CONFIG["display_fields"],chunksdict,chunkids,CONFIG["title_fields"]))
+        ext=hit["_source"]["file"]["extension"]
+        ajr.append(SearchHit(hit, CONFIG["display_fields"],chunksdict,chunkids,CONFIG["title_fields"],ext))
 
     return ajr

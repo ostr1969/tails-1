@@ -1,3 +1,5 @@
+import csv
+import io
 from shutil import copyfile
 from flask import abort, render_template, request, send_file, jsonify
 from flask import request,session
@@ -31,7 +33,7 @@ def search():
     session_data["query"] = query
     session_data["semantic_search"] = semantic_search
     
-    print(session_data)
+    #print(session_data)
     
      # If no query is provided, return empty results
      
@@ -53,7 +55,7 @@ def search():
     else:
         result = utils.lexical_search_documents(EsClient, query, selected_extensions)
 
-
+    
     # Extract relevant information from the result
     hits = hits_from_resutls(result)
     for hit in hits:
@@ -69,19 +71,17 @@ def search():
     
     
     total_hits = len(hits)
-    hits = hits[start:end]
-    ghits={}
-    for h in hits:
-        dataname=h.hit["_source"].get("data",{}).get("name",{})
-        if dataname!={}:
-            if dataname not in ghits:
-                ghits[dataname]=[h]
-            else:
-                ghits[dataname].append(h)
-    total_hits = len(hits)
-    hits = hits[start:end]
+    print("found:",total_hits)
+    #hits = hits[start:end]
+    ghits=utils.orderGroups(hits)
+              
+    total_hits = len(ghits)
+    ghits = ghits[start:end]
     start,end=pagination_window(page,total_hits,3)
-
+    if semantic_search:
+        utils.insertLog(CONFIG["index"],query,selected_extensions,"semantic")
+    else:
+        utils.insertLog(CONFIG["index"],query,selected_extensions,"normal")
     return render_template(
         'search.html', 
         hits=hits, 
@@ -93,7 +93,8 @@ def search():
         results_per_page=CONFIG["results_per_page"],
         semantic_search=semantic_search,
         available_extensions=utils.get_available_extensions(EsClient),
-        selected_extensions=selected_extensions
+        selected_extensions=selected_extensions,
+        ghits=ghits
     )
 
 
@@ -102,11 +103,44 @@ def pagination_window(page, total_pages, window=2):
         end = min(total_pages, page + window)
         return start, end    
 
+@app.route("/log")
+def table():
+    rows = utils.fetch_rows()
+    return render_template("logtable.html", rows=rows)
+
+
+@app.route("/export/csv")
+def export_csv():
+    rows = utils.fetch_rows()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["index", "query", "extensions", "search_type", "date"])
+
+    for r in rows:
+        writer.writerow([
+            r["index"],
+            r["query"],
+            r["extensions"],
+            r["search_type"],
+            r["date"]
+        ])
+
+    output.seek(0)
+
+    return send_file(
+        io.BytesIO(output.getvalue().encode("utf-8")),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name="pdfs_export.csv"
+    )
+
 @app.route('/json/<index>/<file_id>', methods=['GET'])
 def json_view(index: str, file_id: str):
     """endpoint for viewing file"""
     hit = EsClient.get(index=index, id=file_id)
     json_data=hit["_source"]
+    json_data["id"]=file_id
     if "content" in json_data:
         json_data["content"]=[json_data["content"]]
     return render_template("json.html", json_data=json_data)
@@ -290,4 +324,5 @@ def chat():
     
 
 if __name__ == '__main__':
+    utils.buildLog(CONFIG["index"])
     app.run(debug=True, host='0.0.0.0', port=5001)
