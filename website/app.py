@@ -4,6 +4,7 @@ from shutil import copyfile
 from flask import abort, render_template, request, send_file, jsonify
 from flask import request,session
 from urllib.parse import quote
+import argostranslate.translate
 
 import sys
 import os
@@ -97,7 +98,49 @@ def search():
         ghits=ghits
     )
 
-
+@app.route('/more/<file_id>', methods=['POST','GET'])
+def more(file_id: str):
+    similar_fields=utils.get_config("similar_document_fields")
+    results = utils.similar_documents(EsClient, file_id, CONFIG["index"], utils.get_config("results_per_page"),similar_fields)
+    hits = hits_from_resutls(results)
+    total_hits = len(hits)
+    ghits=utils.orderGroups(hits)
+    utils.insertLog(CONFIG["index"],"similar_to:"+file_id,[],"similar")          
+    total_hits = len(ghits)
+    
+    #print("HITS:", hits[0])
+    return render_template('search.html', 
+        hits=hits, 
+        total_hits=total_hits, 
+        page=1, 
+        query=f"similar_to:{file_id}",
+        results_per_page=CONFIG["results_per_page"],
+        semantic_search=False,
+        available_extensions=utils.get_available_extensions(EsClient),
+        selected_extensions=[],
+        ghits=ghits)
+    
+@app.route('/filter/<file_id>/<prop>', methods=['POST','GET'])
+def filter(file_id: str,prop:str):
+    results = utils.similar_documents(EsClient, file_id, CONFIG["index"], utils.get_config("results_per_page"),[prop])
+    hits = hits_from_resutls(results)
+    total_hits = len(hits)
+    ghits=utils.orderGroups(hits)
+    utils.insertLog(CONFIG["index"],"similar_to:"+file_id+","+prop,[],"similar")          
+    total_hits = len(ghits)
+    
+    #print("HITS:", hits[0])
+    return render_template('search.html', 
+        hits=hits, 
+        total_hits=total_hits, 
+        page=1, 
+        query=f"similar_to:{file_id}:{prop}",
+        results_per_page=CONFIG["results_per_page"],
+        semantic_search=False,
+        available_extensions=utils.get_available_extensions(EsClient),
+        selected_extensions=[],
+        ghits=ghits)    
+    
 def pagination_window(page, total_pages, window=2):
         start = max(1, page - window)
         end = min(total_pages, page + window)
@@ -145,21 +188,7 @@ def json_view(index: str, file_id: str):
         json_data["content"]=[json_data["content"]]
     return render_template("json.html", json_data=json_data)
 
-@app.route('/more/<file_id>', methods=['POST','GET'])
-def more(file_id: str):
-    results = utils.similar_documents(EsClient, file_id, CONFIG["index"], utils.get_config("results_per_page"))
-    hits = hits_from_resutls(results)
-    total_hits = len(hits)
-    #print("HITS:", hits[0])
-    return render_template('search.html', 
-        hits=hits, 
-        total_hits=total_hits, 
-        page=1, 
-        query=f"similar_to:{file_id}",
-        results_per_page=CONFIG["results_per_page"],
-        semantic_search=False,
-        available_extensions=utils.get_available_extensions(EsClient),
-        selected_extensions=[])
+
     
 
 @app.route("/log", methods=["POST"])
@@ -185,6 +214,41 @@ def view(index: str, file_id: str):
     else:
         download = True
     return send_file(target, as_attachment=download)
+
+@app.route("/argos", methods=["GET", "POST"])
+def argostranslate_gui():
+    pairs = utils.get_installed_pairs()
+    result = ""
+    source_text = ""
+    selected_pair = ""
+
+    if request.method == "POST":
+        source_text = request.form.get("source_text", "")
+        selected_pair = request.form.get("pair", "")
+
+        if source_text and selected_pair:
+            from_code, to_code = selected_pair.split("->")
+            print(from_code,to_code)
+            from_lang = next(
+                l for l in argostranslate.translate.get_installed_languages()
+                if l.code == from_code
+            )
+            #print(from_lang.translations_to)
+            to_lang = next(
+                t for t in from_lang.translations_from
+                if t.to_lang.code == to_code
+            )
+
+            result = to_lang.translate(source_text)
+
+    return render_template(
+        "argos.html",
+        pairs=pairs,
+        result=result,
+        source_text=source_text,
+        selected_pair=selected_pair
+    )
+
 
 @app.route('/view1/<index>/<file_id>', methods=['GET'])
 def view1(index: str, file_id: str):

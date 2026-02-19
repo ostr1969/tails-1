@@ -5,6 +5,8 @@ from sentence_transformers import SentenceTransformer
 from __init__ import  EmbeddingModel,EsClient,CONFIG
 import json
 import ollama
+import argostranslate.translate
+import argostranslate.package
 
 SYSTEM_PROMPT = """
 You are an expert assistant answering questions using a retrieval-augmented generation (RAG) system.
@@ -65,6 +67,22 @@ If the user asks for:
 Your goal:
 Produce a faithful, well-cited answer grounded strictly in the retrieved document content.
 """
+def get_installed_pairs():
+    pairs = []
+    installed_languages = argostranslate.translate.get_installed_languages()
+    print(installed_languages)
+    for from_lang in installed_languages:
+        for to_lang in from_lang.translations_to:
+            if to_lang.from_lang.code==to_lang.to_lang.code:
+                continue
+            pairs.append({
+                "from_code": to_lang.from_lang.code,
+                "from_name": to_lang.from_lang.name,
+                "to_code": to_lang.to_lang.code,
+                "to_name": to_lang.to_lang.name,
+            })
+    return pairs
+
 def fetch_rows(limit=1000):
     resp = EsClient.search(
         index=CONFIG["index"]+"_logs",
@@ -314,7 +332,7 @@ def orderGroups(hits):
     #    print([h.hit["_score"] for h in g])
     return all_groups
 
-def similar_documents(es_client, document_id: str, document_index: str, ndocs: int) -> List[Dict]:
+def similar_documents(es_client, document_id: str, document_index: str, ndocs: int,similar_fields:list) -> List[Dict]:
     """
     Search for documents similar to a given document using more_like_this query.
     
@@ -334,7 +352,7 @@ def similar_documents(es_client, document_id: str, document_index: str, ndocs: i
                 "like": [{"_index": document_index, "_id": document_id}],
                 "min_term_freq": 1,
                 "max_query_terms": 25,
-                "fields": get_config("similar_document_fields")
+                "fields": similar_fields
             }
         }
     }

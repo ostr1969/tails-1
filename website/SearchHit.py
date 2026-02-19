@@ -147,7 +147,11 @@ class SearchHit:
             # format field according to styling information
             formatted = display["style"].replace("$VALUE", field_value)
             # collect data to table
-            table_rows.append((display["display_name"], formatted))
+            if display["field"] in CONFIG["filter_fields"]:
+                filter=display["field"]
+            else:
+                filter=""
+            table_rows.append([display["display_name"], formatted,filter])
         titles=[]   
         for display in self.title_fields:
                 field_value = str(self.get_field_value(display))
@@ -195,8 +199,15 @@ class SearchHit:
                         <div class="tooltip-text">{ "\n".join(titles) }</div>
                 </div>
             </td></tr>'''
-        for name, value in table_rows:
-            s += "<tr><td class=\"key\">{}</td><td class=\"value\">{}</td></tr>".format(name, value)
+        for row in table_rows:
+            
+            if row[2]:
+                 route=f"/filter/{self.hit["_id"]}/{row[2]}"
+                 s += '<tr><td class="key">{}</td><td class="value"><a class="link" href="{}">{}</a></td></tr>'.format(
+                     row[0],route,row[1]
+                            )
+            else:
+                s += "<tr><td class=\"key\">{}</td><td class=\"value\">{}</td></tr>".format(row[0], row[1])
         s += "</table>"
         #print(s+"\n")
         

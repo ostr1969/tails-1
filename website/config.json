@@ -3,6 +3,7 @@
     "elasticsearch_url": "http://localhost:9200",
     "search_fields": ["*"],
     "similar_document_fields": ["grobid.metadata.title", "huridocs.title", "content","meta.title"],
+    "filter_fields": ["data.topics","data.subject"],
     "open_file_types": ["pdf", "jpeg", "png"],
     "display_fields": [
        
@@ -11,7 +12,9 @@
         {"field": "file.created", "display_name": "Creation Time", "style": "$VALUE"},
         {"field": "content", "display_name": "Content", "style": "$VALUE", "use_highlights": true, "max_length": 1000},
         {"field": "dwg_content.content", "display_name": "Content", "style": "$VALUE", "use_highlights": true, "max_length": 1000},
-         {"field": "data.name", "display_name": "az", "style": "$VALUE"}
+         {"field": "data.name", "display_name": "az", "style": "$VALUE"},
+          {"field": "data.topics", "display_name": "topics", "style": "$VALUE"},
+           {"field": "data.subject", "display_name": "subject", "style": "$VALUE"}
     ],
     "title_fields":["huridocs.title","grobid.title","title","meta.title"],
     "highlight_fields": [ "file.filename","dwg_content.file","content", "dwg_content.layers", "dwg_content.content", "dwg_content.contentrev",

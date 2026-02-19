@@ -47,6 +47,14 @@ def addTitles():
              "huridocs":{"title":f"htitle{i}"},
              "data":{"title":f"dtitle{i}"}} 
         es.update(index="pdfs",id=hit["_id"],doc=doc)   
+def addfilter():
+    resp=es.search(index="pdfs",query={"multi_match":{"query":"numerics"}},size=5)
+    i=10005   
+    for hit in resp["hits"]["hits"]:
+        i+=1 
+        doc={
+             "data":{"topic":f"numerics"}} 
+        es.update(index="pdfs",id=hit["_id"],doc=doc)           
 def fixextension():
     resp=es.search(index="pdfs",query={"multi_match":{"query":"program"}},size=350)
     for hit in resp["hits"]["hits"]:
@@ -60,4 +68,4 @@ def fixextension():
         print(doc)
         es.update(index="pdfs",id=hit["_id"],doc=doc)         
 if __name__=="__main__":
-    fixextension()        
+    addfilter()        

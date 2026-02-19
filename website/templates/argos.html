@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Argos Translate GUI</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+        }
+        textarea {
+            width: 100%;
+            height: 140px;
+        }
+        select, button {
+            padding: 6px;
+            margin-top: 8px;
+        }
+        .row {
+            margin-bottom: 12px;
+        }
+        .result {
+            white-space: pre-wrap;
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-height: 100px;
+            background: #f8f8f8;
+        }
+    </style>
+</head>
+<body>
+    <h2>Argos Translate</h2>
+
+    <form method="POST">
+        <div class="row">
+            <label>Language pair:</label><br>
+            <select name="pair" required>
+                <option value="">-- Select installed language pair --</option>
+                {% for p in pairs %}
+                    <option value="{{ p.from_code }}->{{ p.to_code }}"
+                        {% if selected_pair == p.from_code ~ "->" ~ p.to_code %}selected{% endif %}>
+                        {{ p.from_name }} ({{ p.from_code }}) → {{ p.to_name }} ({{ p.to_code }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="row">
+            <label>Text to translate:</label>
+            <textarea name="source_text">{{ source_text }}</textarea>
+        </div>
+
+        <button type="submit">Translate</button>
+    </form>
+
+    <h3>Result</h3>
+    <div class="result">{{ result }}</div>
+</body>
+</html>
