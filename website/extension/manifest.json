@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Tails Argos translate",
+  "version": "1.0",
+  "permissions": ["contextMenus","scripting",
+    "tabs"],
+  "background": {
+    "service_worker": "bg.js"
+  }
+}

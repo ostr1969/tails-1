@@ -1,7 +1,7 @@
 import csv
 import io
 from shutil import copyfile
-from flask import abort, render_template, request, send_file, jsonify
+from flask import abort, redirect, render_template, request, send_file, jsonify, url_for
 from flask import request,session
 from urllib.parse import quote
 import argostranslate.translate
@@ -20,28 +20,36 @@ app.secret_key = "somekey"
 
 @app.route('/', methods=['GET', 'POST'])
 def search():
-    # Pagination
-    if request.method == "GET":
-        session.clear()
-    print(request)    
-    page = int(request.args.get('page', 1))
-    start = (page - 1) * CONFIG["results_per_page"]
-    end = start + CONFIG["results_per_page"]
+    redir=request.args.get("_redir")
+    print(redir)
+    redirected = redir == "1"
 
-    query = request.form.get('query',  request.args.get('query', ''))
-    semantic_search = request.form.get('search_mode', 'normal') != 'normal'
-    semantic_search = True if semantic_search else False
-    selected_extensions = request.form.getlist('file_extensions')
-    session["selected_extensions"] = selected_extensions    
-    session["query"] = query
-    session["semantic_search"] = semantic_search
+    if request.method=="POST":    
+        page = int(request.args.get('page', 1))
+        query = request.form.get('query',  request.args.get('query', ''))
+        semantic_search = request.form.get('search_mode', 'normal') != 'normal'
+        semantic_search = True if semantic_search else False
+        selected_extensions = request.form.getlist('file_extensions')
+        session["selected_extensions"] = selected_extensions    
+        session["query"] = query
+        session["semantic_search"] = semantic_search
+        session["page"] = page
+        return redirect(url_for("search", _redir=1))# this ensures that we render from get, and so can back on browser
+    #------GET------------
+    if not redirected: #means we got here from GET but not from redirection
+        session.clear()
+        return render_template('index.html')
     
-     
+    selected_extensions=session["selected_extensions"]
+    query=session["query"]
+    semantic_search=session["semantic_search"]
+    page=session["page"]
     #print("query:", query, "semantic_search:", semantic_search, "selected_extensions:", selected_extensions)
     if len(query) == 0:
         return render_template('index.html')
-
     # Perform the search based on the selected type
+    start = (page - 1) * CONFIG["results_per_page"]
+    end = start + CONFIG["results_per_page"]
     if semantic_search:
         result = utils.semantic_search_documents(
             es_client=EsClient,
@@ -69,7 +77,7 @@ def search():
     
     
     total_hits = len(hits)
-    print("found:",total_hits)
+    
     #hits = hits[start:end]
     ghits=utils.orderGroups(hits)
               
@@ -97,6 +105,7 @@ def search():
 
 @app.route('/more/<file_id>', methods=['POST','GET'])
 def more(file_id: str):
+    print(request)
     page = int(request.args.get('page', 1))
     start = (page - 1) * CONFIG["results_per_page"]
     end = start + CONFIG["results_per_page"]
@@ -243,9 +252,10 @@ def view(index: str, file_id: str):
 
 @app.route("/argos", methods=["GET", "POST"])
 def argostranslate_gui():
+    text=request.args.get('text', "")
     pairs = utils.get_installed_pairs()
     result = ""
-    source_text = ""
+    source_text = text
     selected_pair = ""
 
     if request.method == "POST":
