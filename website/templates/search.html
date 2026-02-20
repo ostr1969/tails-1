@@ -326,8 +326,8 @@
                                             <span class="tooltip">More like this</span>
                                         </button>
                                          <button class="result-action-btn" id="json-{{ loop.index }}"
-                                            onclick="window.location.href='/json/{{ hit.hit["_index"] }}/{{ hit.hit["_id"] }}'">
-                                            <img src="{{ url_for('static', filename='images/send.png') }}" alt="json" style="width: 24px; height: 24px;">
+                                            onclick="window.open('/json/{{ hit.hit['_index'] }}/{{ hit.hit['_id'] }}', '_blank')">
+                                            <img src="{{ url_for('static', filename='images/jsonsmall.png') }}" alt="json" style="width: 24px; height: 24px;">
                                             <span class="tooltip">json</span>
                                         </button>
                                     </div>

@@ -23,6 +23,7 @@ def search():
     # Pagination
     if request.method == "GET":
         session.clear()
+    print(request)    
     page = int(request.args.get('page', 1))
     start = (page - 1) * CONFIG["results_per_page"]
     end = start + CONFIG["results_per_page"]
@@ -99,12 +100,13 @@ def more(file_id: str):
     page = int(request.args.get('page', 1))
     start = (page - 1) * CONFIG["results_per_page"]
     end = start + CONFIG["results_per_page"]
+    selected_extensions=session["selected_extensions"]
     similar_fields=utils.get_config("similar_document_fields")
     results = utils.similar_documents(EsClient, file_id, CONFIG["index"], utils.get_config("results_per_page"),similar_fields)
     hits = hits_from_resutls(results)
     total_hits = len(hits)
     ghits=utils.orderGroups(hits)
-    utils.insertLog(CONFIG["index"],"similar_to:"+file_id,[],"similar")          
+    utils.insertLog(CONFIG["index"],"similar_to:"+file_id,selected_extensions,"similar")          
     total_hits = len(ghits)
     start,end=pagination_window(page,total_hits,3)
     
@@ -119,7 +121,7 @@ def more(file_id: str):
         results_per_page=CONFIG["results_per_page"],
         semantic_search=False,
         available_extensions=utils.get_available_extensions(EsClient),
-        selected_extensions=[],
+        selected_extensions=selected_extensions,
         ghits=ghits)
 
 @app.route("/help")
@@ -131,7 +133,7 @@ def filter(file_id: str,prop:str):
     page = int(request.args.get('page', 1))
     start = (page - 1) * CONFIG["results_per_page"]
     end = start + CONFIG["results_per_page"]
-
+    selected_extensions=session["selected_extensions"]
     query = session["query"]
     current=EsClient.get(index=CONFIG["index"],id=file_id)
     propval=utils.get_es_value(current,prop)
@@ -148,7 +150,7 @@ def filter(file_id: str,prop:str):
     ghits = ghits[start:end]
     start,end=pagination_window(page,total_hits,3)
    
-    utils.insertLog(CONFIG["index"],query+":"+prop,[],"filter")
+    utils.insertLog(CONFIG["index"],f"{query} AND {prop}:{propval}",selected_extensions,"filter")
     
     
     #print("HITS:", hits[0])
@@ -162,7 +164,7 @@ def filter(file_id: str,prop:str):
         results_per_page=CONFIG["results_per_page"],
         semantic_search=False,
         available_extensions=utils.get_available_extensions(EsClient),
-        selected_extensions=[],
+        selected_extensions=selected_extensions,
         ghits=ghits)    
     
 def pagination_window(page, total_pages, window=2):
