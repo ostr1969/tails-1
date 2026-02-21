@@ -186,27 +186,36 @@ def search_chunks_knn(es_client, chunk_index: str, nchunks: int, model: Sentence
         "k": nchunks,
         "num_candidates": nchunks * 2
     }
-
+    min_chunk_length=min(len(query),CONFIG["semantic_search"]["minimum_sementic_length"])
     # Add a filter for document_id if provided
     base_query = {
-        "knn": knn_query,
-        "_source": ["doc_id", "text", "pages", "doc_index"]
+        "_source": ["doc_id", "text", "pages", "doc_index"],
+        "query": {
+        "bool": {
+            "filter": [
+                {"range": {"text_length": {"gt": min_chunk_length}}}
+            ],
+            "must": [
+                {"knn": knn_query}
+            ]
+        }
+    }
     }
 
     if document_id:
         # Handle both single ID (string) and multiple IDs (list)
         if isinstance(document_id, list):
-            base_query["query"] = {
+            base_query["query"]["bool"]["filter"].append( {
                 "terms": {
                     "doc_id": document_id
                 }
-            }
+            })
         else:
-            base_query["query"] = {
-                "term": {
+            base_query["query"]["bool"]["filter"].append( {
+                "terms": {
                     "doc_id": document_id
                 }
-            }
+            })
 
     response = es_client.search(
         index=chunk_index,

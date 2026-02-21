@@ -33,9 +33,10 @@
     },
     "semantic_search": {
         "model_path": "LaBSE",         
-        "nchunks": 1000,
+        "nchunks": 200,
         "ndocs": 100,
-        "ollama_embedding_model": "qwen3-embedding:8b"
+        "ollama_embedding_model": "qwen3-embedding:8b",
+        "minimum_sementic_length":20
     },
     "chat_settings": {
         "key": "AIzaSyARwXAiNyAhR1PGcRPINJ8xkxnXIBN-rHM",

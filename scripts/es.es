@@ -96,3 +96,17 @@ get pdfs/_search
     }
   }
 }
+
+POST /pdfs_chunks/_update_by_query
+{
+  "script": {
+    "lang": "painless",
+    "source": " 
+      if (ctx._source.containsKey('text') && ctx._source.text != null) { 
+        ctx._source.text_length = ctx._source.text.length(); 
+      } else { 
+        ctx._source.text_length = 0; 
+      }
+    "
+  }
+}
