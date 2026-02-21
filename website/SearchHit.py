@@ -192,12 +192,26 @@ class SearchHit:
         titles,table_rows = self.hit_to_table()
         # convert table to HTML
         s = "<table class=\"document-table\">"
+        track_html = "".join(f"<div>{line}</div>" for line in titles)
         if len(titles)>0:
-            #print(titles)
-            s += f'''<tr><td class=\"key\">title</td><td class=\"tvalue\">{titles[0]}
+            internal_marquee=f'''
+            <div class="hover-v-marquee">
+            <div class="preview">{titles[0]}</div>
+            <div class="marquee">
+                <div class="track">
+               {track_html}
+                </div>
+            </div>
+            </div>'''
+            internal_tooltip=f'''{titles[0]}
                 <div class="tooltip">
                         <div class="tooltip-text">{ "\n".join(titles) }</div>
                 </div>
+            '''
+            
+            
+            
+            s += f'''<tr><td class=\"key\">title</td><td class=\"tvalue\">{internal_tooltip}
             </td></tr>'''
         for row in table_rows:
             

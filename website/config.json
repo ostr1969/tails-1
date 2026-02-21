@@ -4,7 +4,7 @@
     "search_fields": ["*"],
     "similar_document_fields": ["grobid.metadata.title", "huridocs.title", "content","meta.title"],
     "filter_fields": ["data.topic","data.subject"],
-    "open_file_types": ["pdf", "jpeg", "png"],
+    "open_file_types": ["pdf", "jpeg", "png","txt"],
     "display_fields": [
        
         {"field": "grobid.abstract.text", "display_name": "Abstract", "style": "$VALUE","use_highlights": true, "max_length": 1000},

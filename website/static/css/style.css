@@ -191,6 +191,8 @@ a:hover {
     border: 1px solid var(--border-light);
     padding: 8px;
     text-align: center;
+    width: 100%;
+    
 }
 
 .file-extensions-table th,
@@ -206,7 +208,9 @@ a:hover {
 .document-table .key {
     width: 10%;
     font-weight: 600;
+    
 }
+
 
 .document-title {
     font-size: larger;

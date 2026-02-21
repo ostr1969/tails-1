@@ -47,6 +47,19 @@
       color: #fb7185;
       font-weight: 600;
     }
+    .box-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr)); /* two equal columns */
+      gap: 16px;                                        /* spacing between boxes */
+      align-items: stretch;
+    }
+
+    /* Optional: stack to one column on small screens */
+    @media (max-width: 768px) {
+      .box-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -56,88 +69,91 @@
     The <code>query_string</code> syntax lets you write powerful search expressions in one line.
     Use this when you want advanced search logic in a single input box.
   </p>
+  <div class="box-grid">
+      <div class="box">
+        <h3>Boolean Logic</h3>
+        <p>
+          Combine terms using:
+          <code>AND</code>, <code>OR</code>, <code>NOT</code>, and parentheses.
+        </p>
+        <p class="example">Examples:</p>
+        <code>deep learning AND optimization</code><br>
+        <code>(nlp OR "natural language") AND transformer</code>
+      </div>
 
-  <div class="box">
-    <h3>Boolean Logic</h3>
-    <p>
-      Combine terms using:
-      <code>AND</code>, <code>OR</code>, <code>NOT</code>, and parentheses.
-    </p>
-    <p class="example">Examples:</p>
-    <code>deep learning AND optimization</code><br>
-    <code>(nlp OR "natural language") AND transformer</code>
-  </div>
+      <div class="box">
+        <h3>Field Search + Wildcards</h3>
+        <p>
+          Search specific fields. Use wildcards on field names.
+        </p>
+        <p class="example">Examples:</p>
+        <code>title:optimization</code><br>
+        <code>meta.*:collocation</code><br>
+        <code>data.name:50073</code> <a class=hint> For doc number</a>
+      </div>
 
-  <div class="box">
-    <h3>Field Search + Wildcards</h3>
-    <p>
-      Search specific fields. Use wildcards on field names.
-    </p>
-    <p class="example">Examples:</p>
-    <code>title:optimization</code><br>
-    <code>meta.*:collocation</code>
-  </div>
+      <div class="box">
+        <h3>Fuzziness (Typo Tolerance)</h3>
+        <p>
+          Add <code>~</code> to allow misspellings.
+        </p>
+        <p class="example">Examples:</p>
+        <code>optimzation~</code><br>
+        <code>collocaton~2</code>
+        <p class="hint">
+          Higher numbers allow more edits but can reduce precision.
+        </p>
+      </div>
 
-  <div class="box">
-    <h3>Fuzziness (Typo Tolerance)</h3>
-    <p>
-      Add <code>~</code> to allow misspellings.
-    </p>
-    <p class="example">Examples:</p>
-    <code>optimzation~</code><br>
-    <code>collocaton~2</code>
-    <p class="hint">
-      Higher numbers allow more edits but can reduce precision.
-    </p>
-  </div>
+      <div class="box">
+        <h3>Word Distance (Proximity Search)</h3>
+        <p>
+          Control how close words must be inside quotes.
+        </p>
+        <p class="example">Examples:</p>
+        <code>"nonlinear programming"~5</code>
+        <p class="hint">
+          Smaller numbers = stricter phrase matching.
+        </p>
+      </div>
 
-  <div class="box">
-    <h3>Word Distance (Proximity Search)</h3>
-    <p>
-      Control how close words must be inside quotes.
-    </p>
-    <p class="example">Examples:</p>
-    <code>"nonlinear programming"~5</code>
-    <p class="hint">
-      Smaller numbers = stricter phrase matching.
-    </p>
-  </div>
+      <div class="box">
+        <h3>Range Queries</h3>
+        <p>
+          Filter numeric or date fields with ranges.
+        </p>
+        <p class="example">Examples:</p>
+        <code>file.created:[2018-01-01 TO 2022-12-31]</code><br>
+        <code>file.created:{2023-01-01 TO 2024-01-01}</code>
+        <p class="hint">
+          <code>[ ]</code> = inclusive, <code>{ }</code> = exclusive
+        </p>
+      </div>
 
-  <div class="box">
-    <h3>Range Queries</h3>
-    <p>
-      Filter numeric or date fields with ranges.
-    </p>
-    <p class="example">Examples:</p>
-    <code>year:[2018 TO 2024]</code><br>
-    <code>date:{2023-01-01 TO 2024-01-01}</code>
-    <p class="hint">
-      <code>[ ]</code> = inclusive, <code>{ }</code> = exclusive
-    </p>
-  </div>
+      <div class="box">
+        <h3>_exists_ (Field Presence)</h3>
+        <p>
+          Match documents where a field exists.
+        </p>
+        <p class="example">Examples:</p>
+        <code>_exists_:abstract</code><br>
+        <code>_exists_:meta.description</code><br>
+        <code>_exists_:grobid.year</code>
+      </div>
 
-  <div class="box">
-    <h3>_exists_ (Field Presence)</h3>
-    <p>
-      Match documents where a field exists.
-    </p>
-    <p class="example">Examples:</p>
-    <code>_exists_:abstract</code><br>
-    <code>_exists_:author.name</code>
-  </div>
-
-  <div class="box">
-    <h3>Boosting (Ranking Control)</h3>
-    <p>
-      Boost important terms using <code>^</code>.
-    </p>
-    <p class="example">Examples:</p>
-    <code>optimization^3 collocation</code><br>
-    <code>title:collocation^5 OR body:collocation</code>
-    <p class="hint">
-      Higher boost = more influence on ranking.
-    </p>
-  </div>
+      <div class="box">
+        <h3>Boosting (Ranking Control)</h3>
+        <p>
+          Boost important terms using <code>^</code>.
+        </p>
+        <p class="example">Examples:</p>
+        <code>optimization^3 collocation</code><br>
+        <code>title:collocation^5 OR body:collocation</code>
+        <p class="hint">
+          Higher boost = more influence on ranking.
+        </p>
+      </div>
+  </div    
 
   <div class="box">
     <h3>Common Pitfalls</h3>
@@ -151,7 +167,7 @@
   <div class="box">
     <h3>Example Power Query</h3>
     <code>
-      (title:optimization^3 OR body:optimization) AND "nonlinear programming"~4 AND _exists_:pdf_url AND year:[2020 TO 2025]
+      (title:optimization^3 OR abstract:optimization) AND "nonlinear programming"~4 AND _exists_:data.number AND file.created:[2018-01-01 TO 2022-12-31]
     </code>
   </div>
 

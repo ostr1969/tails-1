@@ -21,7 +21,7 @@ app.secret_key = "somekey"
 @app.route('/', methods=['GET', 'POST'])
 def search():
     redir=request.args.get("_redir")
-    print(redir)
+    
     redirected = redir == "1"
 
     if request.method=="POST":    
@@ -43,7 +43,7 @@ def search():
     selected_extensions=session["selected_extensions"]
     query=session["query"]
     semantic_search=session["semantic_search"]
-    page=session["page"]
+    page=page = int(request.args.get('page', session["page"]))
     #print("query:", query, "semantic_search:", semantic_search, "selected_extensions:", selected_extensions)
     if len(query) == 0:
         return render_template('index.html')

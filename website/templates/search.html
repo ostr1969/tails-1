@@ -218,7 +218,37 @@
             color: darkblue;
             text-decoration: underline;
         }
-            
+        .hover-v-marquee {
+        height: 1.6em;
+        width: 700px;
+        position: relative;
+        overflow: hidden;
+        }
+
+        .preview {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        }
+
+        .marquee {
+        position: absolute;
+        inset: 0;
+        display: none;
+        overflow: hidden;
+        }
+
+        .hover-v-marquee:hover .preview { visibility: hidden; }
+        .hover-v-marquee:hover .marquee { display: block; }
+
+        .track {
+        animation: vmarquee 6s linear infinite;
+        }
+
+        @keyframes vmarquee {
+        0%   { transform: translateY(0%); }
+        100% { transform: translateY(-100%); }
+        }
     </style>
 </head>
 <body>
@@ -334,6 +364,7 @@
                            
                                     <div class="result-content">
                                         {{ hit.make_html()|safe }}
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -342,7 +373,7 @@
              {% endfor %}
              <script>
                 document.querySelectorAll('[id^="tabs-"]').forEach(el => {
-                    $(el).tabs();
+                    $(el).tabs({heightStyle: "auto", hide: { effect: "clip", duration: 500 }});
                 });
                
 
@@ -359,7 +390,7 @@
                                 {% if p == page %}
                                         <a class="current">{{ p }}</a>
                                 {% else %}
-                                        <a href="?page={{ p }}&query={{ query }}">{{ p }}</a>
+                                        <a href="?page={{ p }}&_redir=1">{{ p }}</a>
                                 {% endif %}
                             {% endfor %}
                     </div>
