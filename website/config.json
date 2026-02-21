@@ -16,7 +16,7 @@
           {"field": "data.topic", "display_name": "topic", "style": "$VALUE"},
            {"field": "data.subject", "display_name": "subject", "style": "$VALUE"}
     ],
-    "title_fields":["huridocs.title","grobid.title","title","meta.title"],
+    "title_fields":["huridocs.title","grobid.title","title","meta.title","grobid.metadata.title"],
     "highlight_fields": [ "file.filename","dwg_content.file","content", "dwg_content.layers", "dwg_content.content", "dwg_content.contentrev",
      "dwg_content.imagenames", "path.real","huridocs.title", "grobid.metadata.title", "grobid.abstract.text", "meta.title"],
     "base_paths": {},

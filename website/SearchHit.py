@@ -157,6 +157,8 @@ class SearchHit:
                 field_value = str(self.get_field_value(display))
                 if field_value is None or field_value=="None" or field_value=="" or field_value=="[]":
                     continue
+                if  "highlight" in self.hit and display in self.hit["highlight"]:
+                    field_value = "...".join(self.hit["highlight"][display])
                 titles.append(field_value)
         return titles,table_rows
     
