@@ -156,8 +156,9 @@ def get_config(key: str):
 
 def get_response( system_prompt: str, model_name: str,  input_text: str):
     ajr = ""
+    #print(system_prompt[:1300])
     chunk= ollama.chat(model=model_name, messages=[
-        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": system_prompt[:3000]},
         {"role": "user", "content": input_text}
     ],
     options={
@@ -171,7 +172,7 @@ def get_response( system_prompt: str, model_name: str,  input_text: str):
 
     return ajr
 
-def search_chunks_knn(es_client, chunk_index: str, nchunks: int, model: SentenceTransformer, query: str, document_id: str = None) -> List[Dict]:
+def search_chunks_knn(es_client, chunk_index: str, nchunks: int, model: SentenceTransformer, query: str, document_ids: str = None) -> List[Dict]:
     query_vector = ollama.embed(model="qwen3-embedding:8b", input=[query], dimensions=1024).embeddings[0]
 #     query_vector =   EmbeddingModel.encode(
 #     query,
@@ -477,17 +478,53 @@ def build_rag_prompt_messages(
     return user_message
 
 
-
-def rag_query(es_client, chunk_index, nchunks, embedding_model, prompt: str, document_id: str):
+def single_doc_response(document_id,model_name, user_query):
+    #print(f"http://132.72.112.48:9200/{get_config('index')}/_doc/{document_id}")
+    document_content = EsClient.get(index=get_config("index"), id=document_id)["_source"]["content"]
     
-    chunks = search_chunks_knn(es_client, chunk_index, nchunks, embedding_model, prompt, document_id=document_id)
-    prompt_with_chunks = build_rag_prompt_messages(chunks, prompt)
+    prompt=f"""You are an expert assistant answering questions using the following document as your only source of information. 
+    If the answer cannot be found in the provided document, say "The provided document does not contain enough information to answer this question."
+    """
+    user_doc=f""" The documents content is : {document_content}"""
+    
+    question=f"""My question is : {user_query}"""
+    ajr = ""
+    #print(system_prompt[:1300])
+    chunk= ollama.chat(model=model_name, messages=[
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": user_doc},
+        {"role": "user", "content": question}
+    ],
+    options={
+        'temperature': 1.0,
+        'top_p': 0.95,
+        'top_k': 40,
+        'num_predict': 8192,
+         "num_ctx": 131072
+    })
+    if chunk["message"]["content"]:
+            ajr += chunk["message"]["content"]
+
+    return ajr
+    
+    
+    return prompt
+def rag_query(es_client, chunk_index, nchunks, embedding_model, user_query: str, document_ids: str):
+    model = get_config("chat_settings.model_name")
+    if len(document_ids)==1:
+        
+        response=single_doc_response(document_ids[0], model, user_query)
+        #print(prompt[:1300])
+        return response, []
+    else:        
+        chunks = search_chunks_knn(es_client, chunk_index, nchunks, embedding_model, user_query, document_ids=document_ids)
+        prompt_with_chunks = build_rag_prompt_messages(chunks, user_query)
 
     # client = genai.Client(
     #     api_key=get_config("chat_settings.key")
     # )
 
-    model = get_config("chat_settings.model_name")
+    
 
     #config = default_model_config(SYSTEM_PROMPT)
 

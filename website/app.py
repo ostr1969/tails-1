@@ -5,6 +5,7 @@ from flask import abort, redirect, render_template, request, send_file, jsonify,
 from flask import request,session
 from urllib.parse import quote
 import argostranslate.translate
+from pathlib import Path
 
 import sys
 import os
@@ -242,7 +243,9 @@ def view(index: str, file_id: str):
         if path.lower().startswith(base_path.lower()):
             path = path.replace(base_path, new_path)
     ext = hit["_source"]["file"]["extension"]
+    fname=Path(path).name
     target = "files/{}.{}".format(file_id, ext)
+    target = "files/{}".format(fname)
     copyfile(path, target)
     if ext.lower() in CONFIG["open_file_types"]:
         download = False
@@ -416,7 +419,7 @@ def chat():
     
     message = request.json["message"]
 
-    response, chunks = utils.rag_query(EsClient, CONFIG["index"] + "_chunks", 5, EmbeddingModel, message, document_id=docids)
+    response, chunks = utils.rag_query(EsClient, CONFIG["index"] + "_chunks", 5, EmbeddingModel, message, document_ids=docids)
     
     sources = utils.chunks_to_sources(EsClient, CONFIG["index"], chunks)
     return jsonify({"response": response, "sources": sources})
