@@ -415,13 +415,16 @@ def chat():
             welcome_message = CONFIG["chat_settings"]["welcome_message"].replace("$SOURCE", "the search results")
             
         return render_template('chat.html', welcome_message=welcome_message, docids=docids)
+    data = request.get_json()
+    message = data["message"]
+    history = data.get("history", [])
     
-    
-    message = request.json["message"]
-
-    response, chunks = utils.rag_query(EsClient, CONFIG["index"] + "_chunks", 5, EmbeddingModel, message, document_ids=docids)
-    
-    sources = utils.chunks_to_sources(EsClient, CONFIG["index"], chunks)
+    if len(docids)==1:
+        response=utils.single_doc_response(docids[0], message, history)
+        sources=[]
+    else:
+        response, chunks = utils.rag_query(EsClient, CONFIG["index"] + "_chunks", 5, message, document_ids=docids)
+        sources = utils.chunks_to_sources(EsClient, CONFIG["index"], chunks)
     return jsonify({"response": response, "sources": sources})
 
     

@@ -165,6 +165,7 @@
     </div>
 
     <script>
+        let chatHistory=[];
         function autoResize(textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
@@ -190,7 +191,7 @@
         async function sendMessage() {
             const userMessage = document.getElementById('user-message').value;
             if (!userMessage) return;
-
+            chatHistory.push({ role: "user", content: userMessage });
             // Display user message
             const chatBox = document.getElementById('chat-box');
             const userMessageDiv = document.createElement('div');
@@ -218,11 +219,11 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ message: userMessage })
+                    body: JSON.stringify({ message: userMessage, history: chatHistory })
                 });
 
                 const data = await response.json();
-
+                chatHistory.push({ role: "assistant", content: data.response });
                 // Remove loading animation
                 chatBox.removeChild(loadingDiv);
 
